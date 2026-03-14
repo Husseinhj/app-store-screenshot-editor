@@ -1,4 +1,4 @@
-import { DeviceType, Platform } from '@/store/types';
+import { DeviceType, Orientation, Platform } from '@/store/types';
 
 export interface FrameColorVariant {
   id: string;
@@ -49,6 +49,27 @@ export function getFrameColors(def: DeviceDefinition, variantId: string) {
 export function getSvgPathForVariant(def: DeviceDefinition, variantId: string): string | null {
   const variant = def.colorVariants.find((v) => v.id === variantId);
   return variant?.svgPath ?? def.svgPath;
+}
+
+/** Returns frame dimensions oriented for portrait/landscape (iPad only). CSS mode uses these. */
+export function getOrientedFrameDimensions(
+  def: DeviceDefinition,
+  orientation: Orientation,
+): { frameWidth: number; frameHeight: number; screenInset: DeviceDefinition['screenInset'] } {
+  if (def.platform !== 'ipad' || orientation === 'landscape') {
+    return { frameWidth: def.frameWidth, frameHeight: def.frameHeight, screenInset: def.screenInset };
+  }
+  // Portrait: swap width/height and rotate insets (clockwise 90°)
+  return {
+    frameWidth: def.frameHeight,
+    frameHeight: def.frameWidth,
+    screenInset: {
+      top: def.screenInset.left,
+      right: def.screenInset.top,
+      bottom: def.screenInset.right,
+      left: def.screenInset.bottom,
+    },
+  };
 }
 
 // ─── Color Variants ──────────────────────────────────────────────────────────

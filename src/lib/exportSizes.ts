@@ -1,4 +1,4 @@
-import { ExportSize, Platform } from '@/store/types';
+import { ExportSize, Orientation, Platform } from '@/store/types';
 
 export const exportSizes: ExportSize[] = [
   { label: 'iPhone 6.9" Display', width: 1320, height: 2868, platform: 'iphone' },
@@ -17,3 +17,13 @@ export const getExportSizesForPlatform = (platform: Platform): ExportSize[] =>
 
 export const getDefaultExportSize = (platform: Platform): ExportSize =>
   getExportSizesForPlatform(platform)[0];
+
+/** Returns export size with width/height swapped for landscape iPad */
+export function getOrientedExportSize(size: ExportSize, orientation: Orientation): ExportSize {
+  if (size.platform !== 'ipad') return size;
+  const w = Math.min(size.width, size.height);
+  const h = Math.max(size.width, size.height);
+  return orientation === 'landscape'
+    ? { ...size, width: h, height: w }
+    : { ...size, width: w, height: h };
+}

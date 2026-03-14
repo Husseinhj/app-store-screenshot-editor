@@ -1,6 +1,6 @@
 import { useProjectStore } from '@/store/useProjectStore';
 import { ScreenshotCard } from './ScreenshotCard';
-import { getExportSizesForPlatform } from '@/lib/exportSizes';
+import { getExportSizesForPlatform, getOrientedExportSize } from '@/lib/exportSizes';
 import { platformLabels, devicesByPlatform } from '@/lib/devices';
 import { ImagePlus, Grid2x2, Layers, Monitor } from 'lucide-react';
 import type { CanvasView, Platform, Screenshot } from '@/store/types';
@@ -18,7 +18,7 @@ export function CanvasArea() {
   const screenshots = project.screenshotsByPlatform[project.platform] ?? [];
   const selectedScreenshot = screenshots.find((s) => s.id === project.selectedScreenshotId);
   const exportSizes = getExportSizesForPlatform(project.platform);
-  const exportSize = exportSizes[exportSizeIndex] ?? exportSizes[0];
+  const rawExportSize = exportSizes[exportSizeIndex] ?? exportSizes[0];
 
   const zoomFactor = zoom / 100;
 
@@ -35,14 +35,14 @@ export function CanvasArea() {
         {canvasView === 'single' && (
           <SingleView
             screenshot={selectedScreenshot ?? null}
-            exportSize={exportSize}
+            rawExportSize={rawExportSize}
             zoomFactor={zoomFactor}
           />
         )}
         {canvasView === 'platform-grid' && (
           <PlatformGridView
             screenshots={screenshots}
-            exportSize={exportSize}
+            rawExportSize={rawExportSize}
             selectedId={project.selectedScreenshotId}
             onSelect={selectScreenshot}
             zoomFactor={zoomFactor}
@@ -78,11 +78,11 @@ function ViewButton({ icon, label, active, onClick }: { icon: React.ReactNode; l
 // ─── Single Screenshot View ──────────────────────────────────────────────────
 function SingleView({
   screenshot,
-  exportSize,
+  rawExportSize,
   zoomFactor,
 }: {
   screenshot: Screenshot | null;
-  exportSize: { width: number; height: number; label: string };
+  rawExportSize: { width: number; height: number; label: string; platform: Platform };
   zoomFactor: number;
 }) {
   if (!screenshot) {
@@ -96,6 +96,7 @@ function SingleView({
     );
   }
 
+  const exportSize = getOrientedExportSize(rawExportSize, screenshot.orientation ?? 'portrait');
   const maxPreviewHeight = 560;
   const maxPreviewWidth = 420;
   const aspectRatio = exportSize.width / exportSize.height;
@@ -152,13 +153,13 @@ function SingleView({
 // ─── Platform Grid: all screenshots for current platform ─────────────────────
 function PlatformGridView({
   screenshots,
-  exportSize,
+  rawExportSize,
   selectedId,
   onSelect,
   zoomFactor,
 }: {
   screenshots: Screenshot[];
-  exportSize: { width: number; height: number; label: string };
+  rawExportSize: { width: number; height: number; label: string; platform: Platform };
   selectedId: string | null;
   onSelect: (id: string) => void;
   zoomFactor: number;
@@ -171,37 +172,39 @@ function PlatformGridView({
     );
   }
 
-  // Thumbnail sizing — fit nicely in a grid
-  const thumbHeight = 280 * zoomFactor;
-  const aspectRatio = exportSize.width / exportSize.height;
-  const thumbWidth = thumbHeight * aspectRatio;
-  const scale = thumbWidth / exportSize.width;
-
   return (
     <div className="flex flex-wrap gap-5 justify-center">
-      {screenshots.map((s, i) => (
-        <div key={s.id} className="flex flex-col items-center gap-2">
-          <div
-            onClick={() => onSelect(s.id)}
-            className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
-              selectedId === s.id ? 'ring-2 ring-accent shadow-lg shadow-accent/20' : 'ring-1 ring-white/10 hover:ring-white/20'
-            }`}
-            style={{ width: thumbWidth, height: thumbHeight }}
-          >
+      {screenshots.map((s, i) => {
+        const exportSize = getOrientedExportSize(rawExportSize, s.orientation ?? 'portrait');
+        const thumbHeight = 280 * zoomFactor;
+        const aspectRatio = exportSize.width / exportSize.height;
+        const thumbWidth = thumbHeight * aspectRatio;
+        const scale = thumbWidth / exportSize.width;
+
+        return (
+          <div key={s.id} className="flex flex-col items-center gap-2">
             <div
-              style={{
-                width: exportSize.width,
-                height: exportSize.height,
-                transform: `scale(${scale})`,
-                transformOrigin: 'top left',
-              }}
+              onClick={() => onSelect(s.id)}
+              className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
+                selectedId === s.id ? 'ring-2 ring-accent shadow-lg shadow-accent/20' : 'ring-1 ring-white/10 hover:ring-white/20'
+              }`}
+              style={{ width: thumbWidth, height: thumbHeight }}
             >
-              <ScreenshotCard screenshot={s} width={exportSize.width} height={exportSize.height} />
+              <div
+                style={{
+                  width: exportSize.width,
+                  height: exportSize.height,
+                  transform: `scale(${scale})`,
+                  transformOrigin: 'top left',
+                }}
+              >
+                <ScreenshotCard screenshot={s} width={exportSize.width} height={exportSize.height} />
+              </div>
             </div>
+            <span className="text-[10px] text-white/40">Screen {i + 1}</span>
           </div>
-          <span className="text-[10px] text-white/40">Screen {i + 1}</span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -226,11 +229,6 @@ function AllPlatformsView({
         const exportSize = sizes[0];
         if (!exportSize) return null;
 
-        const thumbHeight = 200 * zoomFactor;
-        const aspectRatio = exportSize.width / exportSize.height;
-        const thumbWidth = thumbHeight * aspectRatio;
-        const scale = thumbWidth / exportSize.width;
-
         return (
           <div key={platform}>
             <div className="flex items-center gap-2 mb-3">
@@ -245,34 +243,42 @@ function AllPlatformsView({
               <div className="text-[11px] text-white/20 pl-2">No screenshots</div>
             ) : (
               <div className="flex flex-wrap gap-4">
-                {screenshots.map((s, i) => (
-                  <div key={s.id} className="flex flex-col items-center gap-1.5">
-                    <div
-                      onClick={() => {
-                        useProjectStore.getState().setPlatform(platform);
-                        onSelect(s.id);
-                      }}
-                      className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
-                        selectedId === s.id && project.platform === platform
-                          ? 'ring-2 ring-accent shadow-lg shadow-accent/20'
-                          : 'ring-1 ring-white/10 hover:ring-white/20'
-                      }`}
-                      style={{ width: thumbWidth, height: thumbHeight }}
-                    >
+                {screenshots.map((s, i) => {
+                  const orientedSize = getOrientedExportSize(exportSize, s.orientation ?? 'portrait');
+                  const thumbHeight = 200 * zoomFactor;
+                  const aspectRatio = orientedSize.width / orientedSize.height;
+                  const thumbWidth = thumbHeight * aspectRatio;
+                  const scale = thumbWidth / orientedSize.width;
+
+                  return (
+                    <div key={s.id} className="flex flex-col items-center gap-1.5">
                       <div
-                        style={{
-                          width: exportSize.width,
-                          height: exportSize.height,
-                          transform: `scale(${scale})`,
-                          transformOrigin: 'top left',
+                        onClick={() => {
+                          useProjectStore.getState().setPlatform(platform);
+                          onSelect(s.id);
                         }}
+                        className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
+                          selectedId === s.id && project.platform === platform
+                            ? 'ring-2 ring-accent shadow-lg shadow-accent/20'
+                            : 'ring-1 ring-white/10 hover:ring-white/20'
+                        }`}
+                        style={{ width: thumbWidth, height: thumbHeight }}
                       >
-                        <ScreenshotCard screenshot={s} width={exportSize.width} height={exportSize.height} />
+                        <div
+                          style={{
+                            width: orientedSize.width,
+                            height: orientedSize.height,
+                            transform: `scale(${scale})`,
+                            transformOrigin: 'top left',
+                          }}
+                        >
+                          <ScreenshotCard screenshot={s} width={orientedSize.width} height={orientedSize.height} />
+                        </div>
                       </div>
+                      <span className="text-[10px] text-white/30">{i + 1}</span>
                     </div>
-                    <span className="text-[10px] text-white/30">{i + 1}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

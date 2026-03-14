@@ -18,6 +18,8 @@ export type DeviceType =
 
 export type FrameStyle = 'svg' | 'css';
 
+export type Orientation = 'portrait' | 'landscape';
+
 export type Platform = 'iphone' | 'ipad' | 'mac' | 'apple-watch';
 
 export type BackgroundType = 'solid' | 'gradient' | 'image';
@@ -56,6 +58,7 @@ export interface Screenshot {
   frameStyle: FrameStyle;
   frameColorVariant: string;
   showDeviceFrame: boolean;
+  orientation: Orientation;
   text: TextConfig;
   background: BackgroundConfig;
   order: number;

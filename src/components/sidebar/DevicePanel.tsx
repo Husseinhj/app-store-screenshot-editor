@@ -2,7 +2,7 @@ import { useProjectStore } from '@/store/useProjectStore';
 import { devices, devicesByPlatform } from '@/lib/devices';
 import { SidebarSection } from './SidebarSection';
 import type { DeviceType, FrameStyle } from '@/store/types';
-import { Monitor, Smartphone, Code2 } from 'lucide-react';
+import { Monitor, Smartphone, Code2, RectangleVertical, RectangleHorizontal } from 'lucide-react';
 
 export function DevicePanel() {
   const platform = useProjectStore((s) => s.project.platform);
@@ -12,6 +12,7 @@ export function DevicePanel() {
   const setFrameStyle = useProjectStore((s) => s.setFrameStyle);
   const setFrameColorVariant = useProjectStore((s) => s.setFrameColorVariant);
   const setShowDeviceFrame = useProjectStore((s) => s.setShowDeviceFrame);
+  const setOrientation = useProjectStore((s) => s.setOrientation);
 
   const selected = screenshots.find((s: any) => s.id === selectedId);
   if (!selected) return null;
@@ -44,6 +45,37 @@ export function DevicePanel() {
           );
         })}
       </div>
+
+      {/* Orientation toggle — iPad only */}
+      {platform === 'ipad' && (
+        <div className="mb-3">
+          <label className="mb-1.5 block text-[10px] text-white/40">Orientation</label>
+          <div className="grid grid-cols-2 gap-1 rounded-lg bg-surface-700 p-1">
+            <button
+              onClick={() => setOrientation('portrait')}
+              className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-[10px] font-medium transition-colors ${
+                (selected.orientation ?? 'portrait') === 'portrait'
+                  ? 'bg-accent text-white'
+                  : 'text-white/50 hover:text-white/80'
+              }`}
+            >
+              <RectangleVertical size={12} />
+              Portrait
+            </button>
+            <button
+              onClick={() => setOrientation('landscape')}
+              className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-[10px] font-medium transition-colors ${
+                (selected.orientation ?? 'portrait') === 'landscape'
+                  ? 'bg-accent text-white'
+                  : 'text-white/50 hover:text-white/80'
+              }`}
+            >
+              <RectangleHorizontal size={12} />
+              Landscape
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Show Device Frame toggle */}
       <div className="mb-3 flex items-center justify-between rounded-lg bg-surface-700 px-3 py-2">

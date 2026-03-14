@@ -7,6 +7,7 @@ import type {
   CanvasView,
   DeviceType,
   FrameStyle,
+  Orientation,
   Platform,
   Project,
   Screenshot,
@@ -76,6 +77,7 @@ const createScreenshot = (device: DeviceType, order: number, platform: Platform 
   frameStyle: 'svg' as FrameStyle,
   frameColorVariant: 'default',
   showDeviceFrame: true,
+  orientation: 'portrait' as Orientation,
   text: { ...defaultTextByPlatform[platform] },
   background: {
     ...defaultBackground,
@@ -122,6 +124,7 @@ interface ProjectStore {
   setFrameStyle: (style: FrameStyle) => void;
   setFrameColorVariant: (variant: string) => void;
   setShowDeviceFrame: (show: boolean) => void;
+  setOrientation: (orientation: Orientation) => void;
 
   setExportSizeIndex: (index: number) => void;
   setCanvasView: (view: CanvasView) => void;
@@ -246,6 +249,12 @@ export const useProjectStore = create<ProjectStore>()(
         set(produce((state: ProjectStore) => {
           const s = getPlatformScreenshots(state.project).find((s) => s.id === state.project.selectedScreenshotId);
           if (s) s.showDeviceFrame = show;
+        })),
+
+      setOrientation: (orientation) =>
+        set(produce((state: ProjectStore) => {
+          const s = getPlatformScreenshots(state.project).find((s) => s.id === state.project.selectedScreenshotId);
+          if (s) s.orientation = orientation;
         })),
 
       setExportSizeIndex: (index) => set({ exportSizeIndex: index }),

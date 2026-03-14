@@ -1,5 +1,5 @@
-import { devices, getFrameColors, getSvgPathForVariant, type DeviceDefinition, type FrameColorVariant } from '@/lib/devices';
-import type { DeviceType, FrameStyle } from '@/store/types';
+import { devices, getFrameColors, getSvgPathForVariant, getOrientedFrameDimensions, type DeviceDefinition, type FrameColorVariant } from '@/lib/devices';
+import type { DeviceType, FrameStyle, Orientation } from '@/store/types';
 import { ImagePlus } from 'lucide-react';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
   frameStyle?: FrameStyle;
   frameColorVariant?: string;
   showFrame?: boolean;
+  orientation?: Orientation;
 }
 
 export function DeviceFrame({
@@ -18,18 +19,19 @@ export function DeviceFrame({
   frameStyle = 'svg',
   frameColorVariant = 'default',
   showFrame = true,
+  orientation = 'portrait',
 }: Props) {
   const def = devices[device];
   const colors = getFrameColors(def, frameColorVariant);
 
   if (!showFrame) {
-    return <FramelessView def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} />;
+    return <FramelessView def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} orientation={orientation} />;
   }
 
   // SVG mockup mode — use real device SVG images
   const svgPath = getSvgPathForVariant(def, frameColorVariant);
   if (frameStyle === 'svg' && svgPath && def.svgScreenRect) {
-    return <SvgFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} svgPathOverride={svgPath} />;
+    return <SvgFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} svgPathOverride={svgPath} orientation={orientation} />;
   }
 
   // CSS mode fallback
@@ -40,7 +42,7 @@ export function DeviceFrame({
     return <WatchFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} colors={colors} />;
   }
   if (def.platform === 'ipad') {
-    return <TabletFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} colors={colors} />;
+    return <TabletFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} colors={colors} orientation={orientation} />;
   }
   return <PhoneFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} colors={colors} />;
 }
@@ -53,66 +55,139 @@ function SvgFrame({
   screenshotUrl,
   maxHeight,
   svgPathOverride,
+  orientation = 'portrait',
 }: {
   def: DeviceDefinition;
   screenshotUrl: string | null;
   maxHeight: number;
   svgPathOverride?: string;
+  orientation?: Orientation;
 }) {
   const frameSvgPath = svgPathOverride ?? def.svgPath!;
   const vb = def.svgViewBox;
   const sr = def.svgScreenRect!;
+  const isPortraitIpad = def.platform === 'ipad' && orientation === 'portrait';
 
-  // Scale to fit maxHeight
-  const scale = maxHeight / vb.height;
+  // iPad SVGs are landscape-native. For portrait, we rotate the whole frame 90° CW.
+  // The outer container becomes portrait-shaped (swapped width/height).
+  const scale = isPortraitIpad
+    ? maxHeight / vb.width  // portrait: container height maps to SVG width (the shorter dim)
+    : maxHeight / vb.height;
+
   const renderW = vb.width * scale;
   const renderH = vb.height * scale;
 
-  // Screen area in rendered pixels
+  // Screen area in rendered pixels (in the landscape SVG coordinate space)
   const screenX = sr.x * scale;
   const screenY = sr.y * scale;
   const screenW = sr.width * scale;
   const screenH = sr.height * scale;
   const screenR = sr.borderRadius * scale;
 
+  // For portrait iPad: outer container is portrait-shaped
+  const containerW = isPortraitIpad ? renderH : renderW;
+  const containerH = isPortraitIpad ? renderW : renderH;
+
   return (
-    <div className="relative" style={{ width: renderW, height: renderH }}>
-      {/* Screenshot placed BEHIND the SVG frame, clipped to screen area */}
-      <div
-        className="absolute overflow-hidden"
-        style={{
-          left: screenX,
-          top: screenY,
-          width: screenW,
-          height: screenH,
-          borderRadius: screenR,
-        }}
-      >
-        {screenshotUrl ? (
+    <div className="relative" style={{ width: containerW, height: containerH }}>
+      {isPortraitIpad ? (
+        // Portrait iPad: rotate the landscape SVG 90° CW
+        <div
+          className="absolute"
+          style={{
+            width: renderW,
+            height: renderH,
+            transform: `rotate(90deg)`,
+            transformOrigin: 'top left',
+            left: containerW, // after rotation, shift right by containerW to position correctly
+            top: 0,
+          }}
+        >
+          {/* Screenshot — counter-rotated so it stays upright inside the rotated frame.
+              The clip container is landscape (screenW × screenH). We size the image to
+              portrait dims (screenH × screenW), center it, and rotate -90° so it visually
+              fills the landscape clip area while appearing upright to the viewer. */}
+          <div
+            className="absolute overflow-hidden"
+            style={{
+              left: screenX,
+              top: screenY,
+              width: screenW,
+              height: screenH,
+              borderRadius: screenR,
+            }}
+          >
+            {screenshotUrl ? (
+              <img
+                src={screenshotUrl}
+                alt="Screenshot"
+                draggable={false}
+                style={{
+                  position: 'absolute',
+                  width: screenH,
+                  height: screenW,
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%) rotate(-90deg)',
+                  objectFit: 'cover',
+                }}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-black">
+                <div className="text-center text-white/20" style={{ transform: 'rotate(-90deg)' }}>
+                  <ImagePlus size={Math.max(14, screenH * 0.06)} className="mx-auto mb-1" />
+                  <p style={{ fontSize: Math.max(8, screenH * 0.025) }}>Drop screenshot</p>
+                </div>
+              </div>
+            )}
+          </div>
+          {/* SVG frame */}
           <img
-            src={screenshotUrl}
-            alt="Screenshot"
-            className="h-full w-full object-cover"
+            key={frameSvgPath}
+            src={frameSvgPath}
+            alt={def.label}
+            className="absolute inset-0 w-full h-full pointer-events-none"
             draggable={false}
           />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-black">
-            <div className="text-center text-white/20">
-              <ImagePlus size={Math.max(14, screenW * 0.06)} className="mx-auto mb-1" />
-              <p style={{ fontSize: Math.max(8, screenW * 0.025) }}>Drop screenshot</p>
-            </div>
+        </div>
+      ) : (
+        // Landscape iPad or non-iPad: render normally
+        <>
+          <div
+            className="absolute overflow-hidden"
+            style={{
+              left: screenX,
+              top: screenY,
+              width: screenW,
+              height: screenH,
+              borderRadius: screenR,
+            }}
+          >
+            {screenshotUrl ? (
+              <img
+                src={screenshotUrl}
+                alt="Screenshot"
+                className="h-full w-full object-cover"
+                draggable={false}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-black">
+                <div className="text-center text-white/20">
+                  <ImagePlus size={Math.max(14, screenW * 0.06)} className="mx-auto mb-1" />
+                  <p style={{ fontSize: Math.max(8, screenW * 0.025) }}>Drop screenshot</p>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* SVG device frame on top — the transparent screen area lets screenshot show through */}
-      <img
-        key={frameSvgPath}
-        src={frameSvgPath}
-        alt={def.label}
-        className="absolute inset-0 w-full h-full pointer-events-none"
-        draggable={false}
-      />
+          <img
+            key={frameSvgPath}
+            src={frameSvgPath}
+            alt={def.label}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            draggable={false}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -175,26 +250,33 @@ function PhoneFrame({
 }
 
 function TabletFrame({
-  def, screenshotUrl, maxHeight, colors,
+  def, screenshotUrl, maxHeight, colors, orientation = 'portrait',
 }: {
-  def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; colors: FrameColorVariant;
+  def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; colors: FrameColorVariant; orientation?: Orientation;
 }) {
-  const aspectRatio = def.frameWidth / def.frameHeight;
+  const oriented = getOrientedFrameDimensions(def, orientation ?? 'portrait');
+  const aspectRatio = oriented.frameWidth / oriented.frameHeight;
   const frameHeight = maxHeight;
   const frameWidth = frameHeight * aspectRatio;
-  const scale = frameWidth / def.frameWidth;
+  const scale = frameWidth / oriented.frameWidth;
   const bodyR = def.frameBorderRadius * scale;
   const screenR = def.screenBorderRadius * scale;
-  const bezelT = frameHeight * def.screenInset.top / 100;
-  const bezelL = frameWidth * def.screenInset.left / 100;
-  const bezelR = frameWidth * def.screenInset.right / 100;
-  const bezelB = frameHeight * def.screenInset.bottom / 100;
+  const bezelT = frameHeight * oriented.screenInset.top / 100;
+  const bezelL = frameWidth * oriented.screenInset.left / 100;
+  const bezelR = frameWidth * oriented.screenInset.right / 100;
+  const bezelB = frameHeight * oriented.screenInset.bottom / 100;
+  const isPortrait = orientation === 'portrait';
 
   return (
     <div className="relative" style={{ width: frameWidth, height: frameHeight }}>
       <div className="absolute inset-0" style={{ borderRadius: bodyR, backgroundColor: colors.frameColor, boxShadow: `inset 0 0 0 0.5px rgba(255,255,255,0.06), 0 0 0 0.5px ${colors.borderColor}, 0 20px 60px rgba(0,0,0,0.5)` }} />
       <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: bodyR, border: '0.5px solid rgba(255,255,255,0.06)' }} />
-      <div className="absolute rounded-full" style={{ top: bezelT * 0.4, left: '50%', transform: 'translateX(-50%)', width: Math.max(4, 6 * scale), height: Math.max(4, 6 * scale), backgroundColor: '#111', border: '0.5px solid #333' }} />
+      {/* Camera dot — top-center in portrait, right-center in landscape */}
+      {isPortrait ? (
+        <div className="absolute rounded-full" style={{ top: bezelT * 0.4, left: '50%', transform: 'translateX(-50%)', width: Math.max(4, 6 * scale), height: Math.max(4, 6 * scale), backgroundColor: '#111', border: '0.5px solid #333' }} />
+      ) : (
+        <div className="absolute rounded-full" style={{ right: bezelR * 0.4, top: '50%', transform: 'translateY(-50%)', width: Math.max(4, 6 * scale), height: Math.max(4, 6 * scale), backgroundColor: '#111', border: '0.5px solid #333' }} />
+      )}
       <div className="absolute overflow-hidden" style={{ top: bezelT, left: bezelL, right: bezelR, bottom: bezelB, borderRadius: screenR, backgroundColor: '#000' }}>
         {screenshotUrl ? (
           <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-cover" draggable={false} />
@@ -211,8 +293,12 @@ function TabletFrame({
   );
 }
 
-function FramelessView({ def, screenshotUrl, maxHeight }: { def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number }) {
-  const aspectRatio = def.nativeScreenWidth / def.nativeScreenHeight;
+function FramelessView({ def, screenshotUrl, maxHeight, orientation = 'portrait' }: { def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; orientation?: Orientation }) {
+  // For portrait iPad, swap screen dimensions so the aspect ratio is portrait
+  const isPortraitIpad = def.platform === 'ipad' && orientation === 'portrait';
+  const screenW = isPortraitIpad ? Math.min(def.nativeScreenWidth, def.nativeScreenHeight) : def.nativeScreenWidth;
+  const screenH = isPortraitIpad ? Math.max(def.nativeScreenWidth, def.nativeScreenHeight) : def.nativeScreenHeight;
+  const aspectRatio = screenW / screenH;
   let imgHeight = maxHeight * 0.92;
   let imgWidth = imgHeight * aspectRatio;
   if (aspectRatio > 1) { imgWidth = maxHeight * 1.2; imgHeight = imgWidth / aspectRatio; }

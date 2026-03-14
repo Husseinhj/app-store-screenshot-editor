@@ -38,6 +38,7 @@ export function ScreenshotCard({ screenshot, width, height }: Props) {
             frameStyle={screenshot.frameStyle}
             frameColorVariant={screenshot.frameColorVariant}
             showFrame={screenshot.showDeviceFrame}
+            orientation={screenshot.orientation ?? 'portrait'}
           />
         </div>
       </div>
