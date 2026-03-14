@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface-900: #0a0a0a;
+  --color-surface-800: #141414;
+  --color-surface-700: #1e1e1e;
+  --color-surface-600: #282828;
+  --color-surface-500: #3a3a3a;
+  --color-accent: #6366f1;
+  --color-accent-hover: #818cf8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--color-surface-900);
+  color: #fff;
+  overflow: hidden;
+  height: 100vh;
+}
+
+#root {
+  height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.react-colorful {
+  width: 100% !important;
+  height: 150px !important;
+}
+
+.react-colorful__saturation {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.react-colorful__last-control {
+  border-radius: 0 0 8px 8px !important;
+}
