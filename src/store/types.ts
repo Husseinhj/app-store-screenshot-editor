@@ -41,6 +41,7 @@ export interface BackgroundConfig {
   imageUrl: string | null;
 }
 
+// Legacy type kept for reference by panels
 export interface TextConfig {
   content: string;
   fontFamily: string;
@@ -51,15 +52,89 @@ export interface TextConfig {
   lineHeight: number;
 }
 
-export interface Screenshot {
+// ─── Canvas Element System ───────────────────────────────────────────────────
+
+export type CanvasElementType = 'device-frame' | 'text' | 'image' | 'shape';
+
+export type ShapeType = 'rectangle' | 'circle' | 'line' | 'arrow';
+
+/** Position and size as percentages of the export canvas (0–100).
+ *  Allows negative values or values > 100 for off-canvas positioning. */
+export interface ElementTransform {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number; // degrees, 0-360
+}
+
+export interface BaseElement {
   id: string;
-  screenshotImageUrl: string | null;
+  type: CanvasElementType;
+  transform: ElementTransform;
+  zIndex: number;
+  locked: boolean;
+  visible: boolean;
+  flipX: boolean;
+  flipY: boolean;
+}
+
+export interface CustomFrame {
+  id: string;
+  name: string;
+  svgContent: string;
+  screenRect: { x: number; y: number; width: number; height: number };
+  viewBox: string;
+}
+
+export interface DeviceFrameElement extends BaseElement {
+  type: 'device-frame';
   device: DeviceType;
   frameStyle: FrameStyle;
   frameColorVariant: string;
   showDeviceFrame: boolean;
   orientation: Orientation;
-  text: TextConfig;
+  screenshotImageUrl: string | null;
+  customFrameId?: string | null;
+}
+
+export interface TextElement extends BaseElement {
+  type: 'text';
+  content: string;
+  fontFamily: string;
+  fontSize: number;
+  fontWeight: number;
+  color: string;
+  alignment: 'left' | 'center' | 'right';
+  lineHeight: number;
+}
+
+export interface ImageElement extends BaseElement {
+  type: 'image';
+  imageUrl: string;
+  objectFit: 'cover' | 'contain' | 'fill';
+  opacity: number;
+  borderRadius: number;
+}
+
+export interface ShapeElement extends BaseElement {
+  type: 'shape';
+  shapeType: ShapeType;
+  fillColor: string;
+  strokeColor: string;
+  strokeWidth: number;
+  borderRadius: number;
+}
+
+export type CanvasElement = DeviceFrameElement | TextElement | ImageElement | ShapeElement;
+
+// ─── Screenshot & Project ────────────────────────────────────────────────────
+
+export interface Screenshot {
+  id: string;
+  name: string;
+  notes: string;
+  elements: CanvasElement[];
   background: BackgroundConfig;
   order: number;
 }
@@ -82,3 +157,13 @@ export interface Project {
   screenshotsByPlatform: ScreenshotsByPlatform;
   selectedScreenshotId: string | null;
 }
+
+export interface ProjectMeta {
+  id: string;
+  name: string;
+  platform: Platform;
+  lastEditedAt: number;
+  thumbnailDataUrl: string | null;
+}
+
+export type AppView = 'home' | 'editor';

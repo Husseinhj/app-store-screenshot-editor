@@ -34,5 +34,5 @@ export function BackgroundLayer({ background, width, height }: Props) {
       break;
   }
 
-  return <div style={style} />;
+  return <div data-canvas-bg="true" style={style} />;
 }

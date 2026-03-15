@@ -6,8 +6,12 @@ interface Props {
 }
 
 export function HeadlineText({ text, maxWidth }: Props) {
+  // Check if content contains HTML tags (rich text)
+  const isHtml = /<[a-z][\s\S]*>/i.test(text.content);
+
   return (
     <div
+      className="headline-rich-text"
       style={{
         fontFamily: text.fontFamily,
         fontSize: text.fontSize,
@@ -20,8 +24,9 @@ export function HeadlineText({ text, maxWidth }: Props) {
         wordWrap: 'break-word',
         whiteSpace: 'pre-wrap',
       }}
-    >
-      {text.content}
-    </div>
+      {...(isHtml
+        ? { dangerouslySetInnerHTML: { __html: text.content } }
+        : { children: text.content })}
+    />
   );
 }

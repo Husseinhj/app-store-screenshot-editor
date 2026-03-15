@@ -1,5 +1,5 @@
 import { useProjectStore } from '@/store/useProjectStore';
-import { getExportSizesForPlatform, getOrientedExportSize } from '@/lib/exportSizes';
+import { getExportSizesForPlatform } from '@/lib/exportSizes';
 import { ScreenshotCard } from '../canvas/ScreenshotCard';
 import type { Platform } from '@/store/types';
 
@@ -24,24 +24,21 @@ export function ExportRenderer() {
         const screenshots = project.screenshotsByPlatform[project.platform] ?? [];
         const exportSizes = getExportSizesForPlatform(project.platform);
         const exportSize = exportSizes[exportSizeIndex] ?? exportSizes[0];
-        return screenshots.map((screenshot) => {
-          const oriented = getOrientedExportSize(exportSize, screenshot.orientation ?? 'portrait');
-          return (
-            <div
-              key={screenshot.id}
-              id={`export-${screenshot.id}`}
-              style={{
-                width: oriented.width,
-                height: oriented.height,
-                position: 'absolute',
-                left: 0,
-                top: 0,
-              }}
-            >
-              <ScreenshotCard screenshot={screenshot} width={oriented.width} height={oriented.height} />
-            </div>
-          );
-        });
+        return screenshots.map((screenshot) => (
+          <div
+            key={screenshot.id}
+            id={`export-${screenshot.id}`}
+            style={{
+              width: exportSize.width,
+              height: exportSize.height,
+              position: 'absolute',
+              left: 0,
+              top: 0,
+            }}
+          >
+            <ScreenshotCard screenshot={screenshot} width={exportSize.width} height={exportSize.height} />
+          </div>
+        ));
       })()}
 
       {/* Cross-platform export elements — one set per platform */}
@@ -51,24 +48,21 @@ export function ExportRenderer() {
         const size = sizes[0];
         if (!size) return null;
 
-        return screenshots.map((screenshot) => {
-          const oriented = getOrientedExportSize(size, screenshot.orientation ?? 'portrait');
-          return (
-            <div
-              key={`${platform}-${screenshot.id}`}
-              id={`export-${platform}-${screenshot.id}`}
-              style={{
-                width: oriented.width,
-                height: oriented.height,
-                position: 'absolute',
-                left: 0,
-                top: 0,
-              }}
-            >
-              <ScreenshotCard screenshot={screenshot} width={oriented.width} height={oriented.height} />
-            </div>
-          );
-        });
+        return screenshots.map((screenshot) => (
+          <div
+            key={`${platform}-${screenshot.id}`}
+            id={`export-${platform}-${screenshot.id}`}
+            style={{
+              width: size.width,
+              height: size.height,
+              position: 'absolute',
+              left: 0,
+              top: 0,
+            }}
+          >
+            <ScreenshotCard screenshot={screenshot} width={size.width} height={size.height} />
+          </div>
+        ));
       })}
     </div>
   );

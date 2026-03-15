@@ -1,5 +1,5 @@
 import { devices, getFrameColors, getSvgPathForVariant, getOrientedFrameDimensions, type DeviceDefinition, type FrameColorVariant } from '@/lib/devices';
-import type { DeviceType, FrameStyle, Orientation } from '@/store/types';
+import type { DeviceType, FrameStyle, Orientation, CustomFrame } from '@/store/types';
 import { ImagePlus } from 'lucide-react';
 
 interface Props {
@@ -10,6 +10,7 @@ interface Props {
   frameColorVariant?: string;
   showFrame?: boolean;
   orientation?: Orientation;
+  customFrame?: CustomFrame | null;
 }
 
 export function DeviceFrame({
@@ -20,9 +21,15 @@ export function DeviceFrame({
   frameColorVariant = 'default',
   showFrame = true,
   orientation = 'portrait',
+  customFrame,
 }: Props) {
   const def = devices[device];
   const colors = getFrameColors(def, frameColorVariant);
+
+  // Custom frame rendering
+  if (customFrame && showFrame) {
+    return <CustomFrameView customFrame={customFrame} screenshotUrl={screenshotUrl} maxHeight={maxHeight} />;
+  }
 
   if (!showFrame) {
     return <FramelessView def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} orientation={orientation} />;
@@ -115,6 +122,7 @@ function SvgFrame({
               width: screenW,
               height: screenH,
               borderRadius: screenR,
+              backgroundColor: '#000',
             }}
           >
             {screenshotUrl ? (
@@ -129,7 +137,7 @@ function SvgFrame({
                   left: '50%',
                   top: '50%',
                   transform: 'translate(-50%, -50%) rotate(-90deg)',
-                  objectFit: 'cover',
+                  objectFit: 'contain',
                 }}
               />
             ) : (
@@ -161,13 +169,14 @@ function SvgFrame({
               width: screenW,
               height: screenH,
               borderRadius: screenR,
+              backgroundColor: '#000',
             }}
           >
             {screenshotUrl ? (
               <img
                 src={screenshotUrl}
                 alt="Screenshot"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
                 draggable={false}
               />
             ) : (
@@ -231,7 +240,7 @@ function PhoneFrame({
       <div style={{ position: 'absolute', left: -2.5, top: '28.5%', width: 3, height: frameHeight * 0.05, borderRadius: '2px 0 0 2px', backgroundColor: colors.buttonColor }} />
       <div className="absolute overflow-hidden" style={{ top: bezelT, left: bezelL, right: bezelR, bottom: bezelB, borderRadius: screenR, backgroundColor: '#000' }}>
         {screenshotUrl ? (
-          <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-cover" draggable={false} />
+          <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-contain" draggable={false} />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <div className="text-center text-white/20">
@@ -279,7 +288,7 @@ function TabletFrame({
       )}
       <div className="absolute overflow-hidden" style={{ top: bezelT, left: bezelL, right: bezelR, bottom: bezelB, borderRadius: screenR, backgroundColor: '#000' }}>
         {screenshotUrl ? (
-          <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-cover" draggable={false} />
+          <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-contain" draggable={false} />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <div className="text-center text-white/20">
@@ -305,9 +314,9 @@ function FramelessView({ def, screenshotUrl, maxHeight, orientation = 'portrait'
   const borderRadius = Math.min(imgWidth, imgHeight) * 0.06;
 
   return (
-    <div className="relative overflow-hidden" style={{ width: imgWidth, height: imgHeight, borderRadius, boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)' }}>
+    <div className="relative overflow-hidden" style={{ width: imgWidth, height: imgHeight, borderRadius, boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)', backgroundColor: '#000' }}>
       {screenshotUrl ? (
-        <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-cover" draggable={false} />
+        <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-contain" draggable={false} />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-black/80">
           <div className="text-center text-white/30">
@@ -329,9 +338,9 @@ function MacFrame({ def, screenshotUrl, maxHeight, colors }: { def: DeviceDefini
     <div className="relative" style={{ width: frameWidth, height: frameHeight }}>
       <div className="absolute rounded-t-xl" style={{ top: 0, left: frameWidth * 0.04, right: frameWidth * 0.04, bottom: frameHeight * 0.08, backgroundColor: colors.frameColor, border: `2px solid ${colors.borderColor}`, boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
         <div className="absolute left-1/2 -translate-x-1/2 rounded-full bg-[#111]" style={{ top: frameHeight * 0.01, width: 8, height: 8, border: '1px solid #444' }} />
-        <div className="absolute overflow-hidden" style={{ top: `${def.screenInset.top * 0.9}%`, left: '3%', right: '3%', bottom: '3%', borderRadius: def.screenBorderRadius }}>
+        <div className="absolute overflow-hidden" style={{ top: `${def.screenInset.top * 0.9}%`, left: '3%', right: '3%', bottom: '3%', borderRadius: def.screenBorderRadius, backgroundColor: '#000' }}>
           {screenshotUrl ? (
-            <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-cover" draggable={false} />
+            <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-contain" draggable={false} />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-black/80">
               <div className="text-center text-white/30"><ImagePlus size={24} className="mx-auto mb-2" /><p className="text-xs">Drop screenshot</p></div>
@@ -374,15 +383,73 @@ function WatchFrame({ def, screenshotUrl, maxHeight, colors }: { def: DeviceDefi
         right: bezel,
         bottom: bezel,
         borderRadius: cornerRadius - bezel * 0.6,
+        backgroundColor: '#000',
       }}>
         {screenshotUrl ? (
-          <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-cover" draggable={false} />
+          <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-contain" draggable={false} />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-black/80">
             <div className="text-center text-white/30"><ImagePlus size={16} className="mx-auto mb-1" /><p style={{ fontSize: 8 }}>Drop</p></div>
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Custom SVG Frame
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function CustomFrameView({
+  customFrame,
+  screenshotUrl,
+  maxHeight,
+}: {
+  customFrame: CustomFrame;
+  screenshotUrl: string | null;
+  maxHeight: number;
+}) {
+  // Parse viewBox to get aspect ratio
+  const vbParts = customFrame.viewBox.split(/\s+/).map(Number);
+  const vbWidth = vbParts[2] || 100;
+  const vbHeight = vbParts[3] || 100;
+  const aspectRatio = vbWidth / vbHeight;
+
+  const frameHeight = maxHeight;
+  const frameWidth = frameHeight * aspectRatio;
+
+  const sr = customFrame.screenRect;
+  // Convert screen rect from SVG units to pixel positions
+  const screenX = (sr.x / vbWidth) * frameWidth;
+  const screenY = (sr.y / vbHeight) * frameHeight;
+  const screenW = (sr.width / vbWidth) * frameWidth;
+  const screenH = (sr.height / vbHeight) * frameHeight;
+
+  return (
+    <div className="relative mx-auto" style={{ width: frameWidth, height: frameHeight }}>
+      {/* Screenshot behind frame */}
+      <div
+        className="absolute overflow-hidden"
+        style={{ left: screenX, top: screenY, width: screenW, height: screenH, backgroundColor: '#000' }}
+      >
+        {screenshotUrl ? (
+          <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-contain" draggable={false} />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-black/80">
+            <div className="text-center text-white/30">
+              <ImagePlus size={16} className="mx-auto mb-1" />
+              <p style={{ fontSize: 8 }}>Drop</p>
+            </div>
+          </div>
+        )}
+      </div>
+      {/* SVG frame on top */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        dangerouslySetInnerHTML={{ __html: customFrame.svgContent }}
+        style={{ width: frameWidth, height: frameHeight }}
+      />
     </div>
   );
 }

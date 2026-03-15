@@ -1,7 +1,7 @@
 import { useProjectStore } from '@/store/useProjectStore';
 import { SidebarSection } from './SidebarSection';
-import { HexColorPicker } from 'react-colorful';
-import { useState, useCallback } from 'react';
+import { ColorPickerWithAlpha } from '../common/ColorPickerWithAlpha';
+import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import type { BackgroundType, GradientConfig } from '@/store/types';
 
@@ -27,17 +27,15 @@ const presetGradients: GradientConfig[] = [
 ];
 
 const presetSolids = [
-  '#000000', '#1a1a2e', '#16213e', '#0f3460',
-  '#533483', '#e94560', '#0f4c75', '#3282b8',
-  '#1b262c', '#2d4059', '#ea5455', '#f07b3f',
+  'transparent', '#000000', '#1a1a2e', '#16213e',
+  '#0f3460', '#533483', '#e94560', '#0f4c75',
+  '#3282b8', '#1b262c', '#2d4059', '#ea5455',
 ];
 
 export function BackgroundPanel() {
   const selectedId = useProjectStore((s) => s.project.selectedScreenshotId);
   const screenshots = useProjectStore((s) => s.project.screenshotsByPlatform[s.project.platform] ?? []);
   const updateBackground = useProjectStore((s) => s.updateBackground);
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [editingStopIndex, setEditingStopIndex] = useState<number | null>(null);
 
   const selected = screenshots.find((s: any) => s.id === selectedId);
   if (!selected) return null;
@@ -90,30 +88,25 @@ export function BackgroundPanel() {
               <button
                 key={color}
                 onClick={() => updateBackground({ solidColor: color })}
-                className={`h-7 rounded-lg ring-1 transition-all ${background.solidColor === color ? 'ring-accent ring-2' : 'ring-white/10 hover:ring-white/30'}`}
-                style={{ backgroundColor: color }}
+                className={`h-7 rounded-lg ring-1 transition-all ${
+                  background.solidColor === color ? 'ring-accent ring-2' : 'ring-white/10 hover:ring-white/30'
+                }`}
+                style={{
+                  backgroundColor: color === 'transparent' ? 'transparent' : color,
+                  backgroundImage:
+                    color === 'transparent'
+                      ? 'linear-gradient(45deg, #666 25%, transparent 25%), linear-gradient(-45deg, #666 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #666 75%), linear-gradient(-45deg, transparent 75%, #666 75%)'
+                      : undefined,
+                  backgroundSize: color === 'transparent' ? '8px 8px' : undefined,
+                  backgroundPosition: color === 'transparent' ? '0 0, 0 4px, 4px -4px, -4px 0px' : undefined,
+                }}
               />
             ))}
           </div>
-          <div className="flex items-center gap-2 mb-2">
-            <button
-              onClick={() => setShowColorPicker(!showColorPicker)}
-              className="h-8 w-8 shrink-0 rounded-lg ring-1 ring-white/20"
-              style={{ backgroundColor: background.solidColor }}
-            />
-            <input
-              type="text"
-              value={background.solidColor}
-              onChange={(e) => updateBackground({ solidColor: e.target.value })}
-              className="flex-1 rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
-            />
-          </div>
-          {showColorPicker && (
-            <HexColorPicker
-              color={background.solidColor}
-              onChange={(color) => updateBackground({ solidColor: color })}
-            />
-          )}
+          <ColorPickerWithAlpha
+            color={background.solidColor}
+            onChange={(color) => updateBackground({ solidColor: color })}
+          />
         </div>
       )}
 
@@ -155,36 +148,19 @@ export function BackgroundPanel() {
           </div>
 
           {/* Color stops */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             {background.gradient.stops.map((stop, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <button
-                  onClick={() => setEditingStopIndex(editingStopIndex === i ? null : i)}
-                  className="h-6 w-6 shrink-0 rounded ring-1 ring-white/20"
-                  style={{ backgroundColor: stop.color }}
-                />
-                <input
-                  type="text"
-                  value={stop.color}
-                  onChange={(e) => {
-                    const newStops = [...background.gradient.stops];
-                    newStops[i] = { ...newStops[i], color: e.target.value };
-                    updateBackground({ gradient: { ...background.gradient, stops: newStops } });
-                  }}
-                  className="flex-1 rounded bg-surface-700 px-2 py-1 text-[10px] text-white outline-none ring-1 ring-white/10"
-                />
-              </div>
-            ))}
-            {editingStopIndex !== null && (
-              <HexColorPicker
-                color={background.gradient.stops[editingStopIndex]?.color ?? '#000'}
+              <ColorPickerWithAlpha
+                key={i}
+                label={`Stop ${i + 1} (${stop.position}%)`}
+                color={stop.color}
                 onChange={(color) => {
                   const newStops = [...background.gradient.stops];
-                  newStops[editingStopIndex] = { ...newStops[editingStopIndex], color };
+                  newStops[i] = { ...newStops[i], color };
                   updateBackground({ gradient: { ...background.gradient, stops: newStops } });
                 }}
               />
-            )}
+            ))}
           </div>
         </div>
       )}

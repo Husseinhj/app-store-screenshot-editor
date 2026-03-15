@@ -1,17 +1,31 @@
-import { Download, ZoomIn, ZoomOut } from 'lucide-react';
+import { Download, ZoomIn, ZoomOut, Undo2, Redo2, Home } from 'lucide-react';
 import { useProjectStore } from '@/store/useProjectStore';
 import { useExport } from '@/hooks/useExport';
+import { useStore } from 'zustand';
 
 export function Toolbar() {
   const projectName = useProjectStore((s) => s.project.name);
   const setProjectName = useProjectStore((s) => s.setProjectName);
   const zoom = useProjectStore((s) => s.zoom);
   const setZoom = useProjectStore((s) => s.setZoom);
+  const closeProject = useProjectStore((s) => s.closeProject);
   const { exportAllPlatforms, exporting } = useExport();
+
+  const canUndo = useStore(useProjectStore.temporal, (s) => s.pastStates.length > 0);
+  const canRedo = useStore(useProjectStore.temporal, (s) => s.futureStates.length > 0);
+  const undo = () => useProjectStore.temporal.getState().undo();
+  const redo = () => useProjectStore.temporal.getState().redo();
 
   return (
     <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/10 bg-surface-800 px-4">
       <div className="flex items-center gap-3">
+        <button
+          onClick={closeProject}
+          className="rounded p-1.5 text-white/40 hover:text-white/70 hover:bg-surface-700 transition-colors"
+          title="Back to Projects"
+        >
+          <Home size={16} />
+        </button>
         <div className="flex items-center gap-2">
           <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500" />
           <input
@@ -24,6 +38,24 @@ export function Toolbar() {
       </div>
 
       <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 rounded-lg bg-surface-700 px-2 py-1">
+          <button
+            onClick={undo}
+            disabled={!canUndo}
+            className="rounded p-1 text-white/60 hover:bg-surface-600 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/60"
+            title="Undo (Cmd+Z)"
+          >
+            <Undo2 size={14} />
+          </button>
+          <button
+            onClick={redo}
+            disabled={!canRedo}
+            className="rounded p-1 text-white/60 hover:bg-surface-600 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/60"
+            title="Redo (Cmd+Shift+Z)"
+          >
+            <Redo2 size={14} />
+          </button>
+        </div>
         <div className="flex items-center gap-1 rounded-lg bg-surface-700 px-2 py-1">
           <button
             onClick={() => setZoom(zoom - 25)}

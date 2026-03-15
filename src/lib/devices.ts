@@ -403,5 +403,5 @@ export const platformLabels: Record<Platform, string> = {
   iphone: 'iPhone',
   ipad: 'iPad',
   mac: 'Mac',
-  'apple-watch': 'Apple Watch',
+  'apple-watch': 'Watch',
 };

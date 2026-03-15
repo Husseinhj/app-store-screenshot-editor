@@ -1,66 +1,141 @@
+import { useEffect, useCallback } from 'react';
 import { useProjectStore } from '@/store/useProjectStore';
 import { fonts, fontWeights } from '@/lib/fonts';
 import { SidebarSection } from './SidebarSection';
-import { HexColorPicker } from 'react-colorful';
-import { AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
-import { useState } from 'react';
+import { ColorPickerWithAlpha } from '../common/ColorPickerWithAlpha';
+import { AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline as UnderlineIcon } from 'lucide-react';
+import type { TextElement } from '@/store/types';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { Color } from '@tiptap/extension-color';
+import { TextStyle } from '@tiptap/extension-text-style';
+import FontFamily from '@tiptap/extension-font-family';
+import TextAlign from '@tiptap/extension-text-align';
+import UnderlineExt from '@tiptap/extension-underline';
+import { FontSize } from '@/lib/tiptap-font-size';
 
-export function TextPanel() {
-  const selectedId = useProjectStore((s) => s.project.selectedScreenshotId);
-  const screenshots = useProjectStore((s) => s.project.screenshotsByPlatform[s.project.platform] ?? []);
-  const updateText = useProjectStore((s) => s.updateText);
-  const [showColorPicker, setShowColorPicker] = useState(false);
+interface Props {
+  element: TextElement;
+}
 
-  const selected = screenshots.find((s: any) => s.id === selectedId);
-  if (!selected) return null;
+export function TextPanel({ element }: Props) {
+  const updateTextElement = useProjectStore((s) => s.updateTextElement);
 
-  const { text } = selected;
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({ heading: false, codeBlock: false, blockquote: false, horizontalRule: false }),
+      TextStyle,
+      Color,
+      FontFamily,
+      TextAlign.configure({ types: ['paragraph'] }),
+      UnderlineExt,
+      FontSize,
+    ],
+    content: element.content,
+    onUpdate: ({ editor }) => {
+      updateTextElement(element.id, { content: editor.getHTML() });
+    },
+  });
+
+  // Sync content when switching between elements
+  useEffect(() => {
+    if (editor && editor.getHTML() !== element.content) {
+      editor.commands.setContent(element.content);
+    }
+  }, [element.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const setFontSizeForSelection = useCallback(
+    (size: number) => {
+      if (!editor) return;
+      editor.chain().focus().setFontSize(`${size}px`).run();
+    },
+    [editor]
+  );
+
+  const setColorForSelection = useCallback(
+    (color: string) => {
+      if (!editor) return;
+      editor.chain().focus().setColor(color).run();
+    },
+    [editor]
+  );
+
+  const setFontFamilyForSelection = useCallback(
+    (family: string) => {
+      if (!editor) return;
+      editor.chain().focus().setFontFamily(family).run();
+    },
+    [editor]
+  );
+
+  // Get current marks for toolbar state
+  const isBold = editor?.isActive('bold') ?? false;
+  const isItalic = editor?.isActive('italic') ?? false;
+  const isUnderline = editor?.isActive('underline') ?? false;
+
+  const toggleBtnClass = (active: boolean) =>
+    `rounded-lg px-2 py-1.5 transition-colors ${
+      active
+        ? 'bg-accent/20 text-white ring-1 ring-accent/50'
+        : 'bg-surface-700 text-white/50 hover:text-white'
+    }`;
 
   return (
     <SidebarSection title="Text">
-      {/* Content */}
-      <textarea
-        value={text.content}
-        onChange={(e) => updateText({ content: e.target.value })}
-        placeholder="Enter headline..."
-        rows={2}
-        className="mb-3 w-full resize-none rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50 placeholder:text-white/30"
-      />
-
-      {/* Font family */}
-      <div className="mb-3">
-        <label className="mb-1 block text-[10px] text-white/40">Font</label>
-        <select
-          value={text.fontFamily}
-          onChange={(e) => updateText({ fontFamily: e.target.value })}
-          className="w-full rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
-        >
-          {fonts.map((f) => (
-            <option key={f.family} value={f.family}>
-              {f.label}
-            </option>
-          ))}
-        </select>
+      {/* Rich text editor */}
+      <div className="mb-3 rounded-lg bg-surface-700 ring-1 ring-white/10 focus-within:ring-accent/50 overflow-hidden">
+        <EditorContent
+          editor={editor}
+          className="tiptap-editor px-3 py-2 text-xs text-white min-h-[60px] max-h-[120px] overflow-auto"
+        />
       </div>
 
-      {/* Font size & weight */}
-      <div className="mb-3 grid grid-cols-2 gap-2">
-        <div>
-          <label className="mb-1 block text-[10px] text-white/40">Size</label>
-          <input
-            type="number"
-            value={text.fontSize}
-            onChange={(e) => updateText({ fontSize: Number(e.target.value) })}
-            min={12}
-            max={200}
-            className="w-full rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-[10px] text-white/40">Weight</label>
+      {/* Formatting toolbar */}
+      <div className="mb-3 flex gap-1">
+        <button
+          onClick={() => editor?.chain().focus().toggleBold().run()}
+          className={toggleBtnClass(isBold)}
+          title="Bold"
+        >
+          <Bold size={13} />
+        </button>
+        <button
+          onClick={() => editor?.chain().focus().toggleItalic().run()}
+          className={toggleBtnClass(isItalic)}
+          title="Italic"
+        >
+          <Italic size={13} />
+        </button>
+        <button
+          onClick={() => editor?.chain().focus().toggleUnderline().run()}
+          className={toggleBtnClass(isUnderline)}
+          title="Underline"
+        >
+          <UnderlineIcon size={13} />
+        </button>
+      </div>
+
+      {/* Font family + weight */}
+      <div className="mb-3">
+        <label className="mb-1 block text-[10px] text-white/40">Font</label>
+        <div className="grid grid-cols-2 gap-2">
           <select
-            value={text.fontWeight}
-            onChange={(e) => updateText({ fontWeight: Number(e.target.value) })}
+            value={element.fontFamily}
+            onChange={(e) => {
+              updateTextElement(element.id, { fontFamily: e.target.value });
+              setFontFamilyForSelection(e.target.value);
+            }}
+            className="w-full rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
+          >
+            {fonts.map((f) => (
+              <option key={f.family} value={f.family}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={element.fontWeight}
+            onChange={(e) => updateTextElement(element.id, { fontWeight: Number(e.target.value) })}
             className="w-full rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
           >
             {fontWeights.map((w) => (
@@ -72,18 +147,47 @@ export function TextPanel() {
         </div>
       </div>
 
+      {/* Font size */}
+      <div className="mb-3 grid grid-cols-2 gap-2">
+        <div>
+          <label className="mb-1 block text-[10px] text-white/40">Base Size</label>
+          <input
+            type="number"
+            value={element.fontSize}
+            onChange={(e) => updateTextElement(element.id, { fontSize: Number(e.target.value) })}
+            min={12}
+            max={200}
+            className="w-full rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-[10px] text-white/40">Selection Size</label>
+          <input
+            type="number"
+            placeholder="—"
+            min={8}
+            max={400}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              if (val > 0) setFontSizeForSelection(val);
+            }}
+            className="w-full rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
+          />
+        </div>
+      </div>
+
       {/* Line height */}
       <div className="mb-3">
         <label className="mb-1 block text-[10px] text-white/40">
-          Line Height: {text.lineHeight}
+          Line Height: {element.lineHeight}
         </label>
         <input
           type="range"
           min={0.8}
           max={2.0}
           step={0.05}
-          value={text.lineHeight}
-          onChange={(e) => updateText({ lineHeight: Number(e.target.value) })}
+          value={element.lineHeight}
+          onChange={(e) => updateTextElement(element.id, { lineHeight: Number(e.target.value) })}
           className="w-full accent-accent"
         />
       </div>
@@ -99,9 +203,9 @@ export function TextPanel() {
           ].map(({ value, icon: Icon }) => (
             <button
               key={value}
-              onClick={() => updateText({ alignment: value })}
+              onClick={() => updateTextElement(element.id, { alignment: value })}
               className={`flex-1 rounded-lg py-2 transition-colors ${
-                text.alignment === value
+                element.alignment === value
                   ? 'bg-accent/20 text-white ring-1 ring-accent/50'
                   : 'bg-surface-700 text-white/50 hover:text-white'
               }`}
@@ -112,30 +216,19 @@ export function TextPanel() {
         </div>
       </div>
 
-      {/* Color */}
-      <div>
-        <label className="mb-1 block text-[10px] text-white/40">Color</label>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowColorPicker(!showColorPicker)}
-            className="h-8 w-8 shrink-0 rounded-lg ring-1 ring-white/20"
-            style={{ backgroundColor: text.color }}
-          />
-          <input
-            type="text"
-            value={text.color}
-            onChange={(e) => updateText({ color: e.target.value })}
-            className="flex-1 rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
-          />
-        </div>
-        {showColorPicker && (
-          <div className="mt-2">
-            <HexColorPicker
-              color={text.color}
-              onChange={(color) => updateText({ color })}
-            />
-          </div>
-        )}
+      {/* Color — element-level */}
+      <ColorPickerWithAlpha
+        label="Base Color"
+        color={element.color}
+        onChange={(color) => updateTextElement(element.id, { color })}
+      />
+
+      <div className="mt-2">
+        <ColorPickerWithAlpha
+          label="Selection Color"
+          color={element.color}
+          onChange={(color) => setColorForSelection(color)}
+        />
       </div>
     </SidebarSection>
   );
