@@ -351,14 +351,24 @@ function MiniScreenshotPreview({
   accentColor,
   width,
   style,
+  device,
 }: {
   screenshot: ShowcaseScreenshot;
   template: DesignTemplate | undefined;
   accentColor: string;
   width: number;
   style?: React.CSSProperties;
+  device?: ShowcaseDevice;
 }) {
-  const height = width * (16 / 9); // App Store screenshot aspect ratio
+  // Aspect ratio varies by device platform
+  const aspectMultiplier: Record<ShowcaseDevice, number> = {
+    iphone: 16 / 9,
+    ipad: 4 / 3,
+    mac: 10 / 16,
+    watch: 6 / 5,
+  };
+  const deviceType = device ?? screenshot.device;
+  const height = width * (aspectMultiplier[deviceType] ?? 16 / 9);
 
   // Template background
   const getBg = (): string => {
@@ -426,53 +436,129 @@ function MiniScreenshotPreview({
         </div>
       </div>
 
-      {/* Phone mockup */}
-      <div
-        className="absolute overflow-hidden"
-        style={{
-          left: isEditorial ? '50%' : `${Math.max(deviceX, 15)}%`,
-          top: `${deviceSpec?.transform.y ?? 24}%`,
-          width: `${Math.min(deviceSpec?.transform.width ?? 60, 65)}%`,
-          bottom: 0,
-          transform: deviceSpec?.transform.rotation ? `rotate(${deviceSpec.transform.rotation}deg)` : undefined,
-        }}
-      >
+      {/* Device mockup — adapts to device type */}
+      {deviceType === 'mac' ? (
         <div
-          className="relative w-full"
+          className="absolute overflow-hidden"
           style={{
-            aspectRatio: '9 / 19.5',
-            borderRadius: '14% / 6.5%',
-            backgroundColor: '#1c1c1e',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+            left: '10%',
+            bottom: '4%',
+            width: '80%',
           }}
         >
-          {/* Screen */}
+          {/* Mac screen */}
           <div
-            className="absolute overflow-hidden"
+            className="relative w-full"
             style={{
-              top: '2.5%',
-              left: '5%',
-              right: '5%',
-              bottom: '2.5%',
-              borderRadius: '12% / 5.5%',
-              background: screenshot.screenBg,
+              aspectRatio: '16 / 10',
+              borderRadius: '4% / 6%',
+              backgroundColor: '#1c1c1e',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
             }}
           >
-            <ScreenContent
-              headline=""
-              subtitle=""
-              textColor={screenshot.textColor}
-              headlineFontSize={Math.max(3, width * 0.04)}
-              subtitleFontSize={Math.max(2, width * 0.025)}
-            />
+            <div
+              className="absolute overflow-hidden"
+              style={{ top: '3%', left: '3%', right: '3%', bottom: '3%', borderRadius: '2% / 3%', background: screenshot.screenBg }}
+            >
+              <ScreenContent headline="" subtitle="" textColor={screenshot.textColor} headlineFontSize={Math.max(3, width * 0.035)} subtitleFontSize={Math.max(2, width * 0.02)} />
+            </div>
+            {/* Camera dot */}
+            <div className="absolute bg-black/60 rounded-full" style={{ top: '5%', left: '50%', transform: 'translateX(-50%)', width: '2%', height: '3%' }} />
           </div>
-          {/* Dynamic Island */}
-          <div
-            className="absolute bg-black"
-            style={{ top: '3.5%', left: '50%', transform: 'translateX(-50%)', width: '28%', height: '2.8%', borderRadius: 99 }}
-          />
+          {/* Mac base */}
+          <div className="mx-auto" style={{ width: '35%', height: 3, background: 'linear-gradient(180deg, #444 0%, #222 100%)', borderRadius: '0 0 3px 3px' }} />
+          <div className="mx-auto" style={{ width: '50%', height: 2, background: '#1a1a1a', borderRadius: '0 0 4px 4px' }} />
         </div>
-      </div>
+      ) : deviceType === 'ipad' ? (
+        <div
+          className="absolute overflow-hidden"
+          style={{
+            left: isEditorial ? '45%' : `${Math.max(deviceX, 12)}%`,
+            top: `${deviceSpec?.transform.y ?? 28}%`,
+            width: `${Math.min(deviceSpec?.transform.width ?? 60, 70)}%`,
+            bottom: 0,
+          }}
+        >
+          <div
+            className="relative w-full"
+            style={{
+              aspectRatio: '3 / 4',
+              borderRadius: '8% / 6%',
+              backgroundColor: '#1c1c1e',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+            }}
+          >
+            <div
+              className="absolute overflow-hidden"
+              style={{ top: '2.5%', left: '3%', right: '3%', bottom: '2.5%', borderRadius: '5% / 3.5%', background: screenshot.screenBg }}
+            >
+              <ScreenContent headline="" subtitle="" textColor={screenshot.textColor} headlineFontSize={Math.max(3, width * 0.04)} subtitleFontSize={Math.max(2, width * 0.025)} />
+            </div>
+            {/* Camera dot */}
+            <div className="absolute bg-black/60 rounded-full" style={{ top: '1.2%', left: '50%', transform: 'translateX(-50%)', width: '2.5%', height: '1%' }} />
+          </div>
+        </div>
+      ) : deviceType === 'watch' ? (
+        <div
+          className="absolute overflow-hidden"
+          style={{
+            left: '25%',
+            top: '30%',
+            width: '50%',
+            bottom: 0,
+          }}
+        >
+          <div
+            className="relative w-full"
+            style={{
+              aspectRatio: '5 / 6',
+              borderRadius: '24% / 20%',
+              backgroundColor: '#1a1a1a',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4), inset 0 0 0 0.5px rgba(255,255,255,0.06)',
+            }}
+          >
+            {/* Digital Crown */}
+            <div className="absolute" style={{ right: '-3%', top: '28%', width: '4%', height: '14%', borderRadius: 2, backgroundColor: '#333' }} />
+            <div
+              className="absolute overflow-hidden"
+              style={{ top: '8%', left: '8%', right: '8%', bottom: '8%', borderRadius: '18% / 15%', background: screenshot.screenBg }}
+            >
+              <ScreenContent headline="" subtitle="" textColor={screenshot.textColor} headlineFontSize={Math.max(3, width * 0.04)} subtitleFontSize={Math.max(2, width * 0.025)} />
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* iPhone (default) */
+        <div
+          className="absolute overflow-hidden"
+          style={{
+            left: isEditorial ? '50%' : `${Math.max(deviceX, 15)}%`,
+            top: `${deviceSpec?.transform.y ?? 24}%`,
+            width: `${Math.min(deviceSpec?.transform.width ?? 60, 65)}%`,
+            bottom: 0,
+            transform: deviceSpec?.transform.rotation ? `rotate(${deviceSpec.transform.rotation}deg)` : undefined,
+          }}
+        >
+          <div
+            className="relative w-full"
+            style={{
+              aspectRatio: '9 / 19.5',
+              borderRadius: '14% / 6.5%',
+              backgroundColor: '#1c1c1e',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+            }}
+          >
+            <div
+              className="absolute overflow-hidden"
+              style={{ top: '2.5%', left: '5%', right: '5%', bottom: '2.5%', borderRadius: '12% / 5.5%', background: screenshot.screenBg }}
+            >
+              <ScreenContent headline="" subtitle="" textColor={screenshot.textColor} headlineFontSize={Math.max(3, width * 0.04)} subtitleFontSize={Math.max(2, width * 0.025)} />
+            </div>
+            {/* Dynamic Island */}
+            <div className="absolute bg-black" style={{ top: '3.5%', left: '50%', transform: 'translateX(-50%)', width: '28%', height: '2.8%', borderRadius: 99 }} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -486,31 +572,31 @@ function ShowcaseCard({ app, onUse }: { app: ShowcaseApp; onUse: () => void }) {
   // Find the template used by this showcase
   const template = designTemplates.find((t) => t.id === app.templateId);
 
-  // Pick first 4 iPhone screenshots to show as mini App Store screenshot previews
-  const iphoneShots = app.screenshots.filter((s) => s.device === 'iphone').slice(0, 4);
+  // Pick one representative screenshot per platform
+  const platformOrder: ShowcaseDevice[] = ['iphone', 'ipad', 'mac', 'watch'];
+  const representativeShots = platformOrder
+    .map((d) => app.screenshots.find((s) => s.device === d))
+    .filter((s): s is ShowcaseScreenshot => !!s);
 
   return (
     <div className="group relative flex-shrink-0 w-[480px] snap-start rounded-2xl overflow-hidden bg-surface-800 ring-1 ring-white/8 hover:ring-white/20 transition-all">
-      {/* Screenshot previews area — shows what actual App Store screenshots look like */}
-      <div className="relative h-[280px] flex items-end justify-center px-5 pt-5 pb-4 overflow-hidden bg-surface-900/50">
+      {/* Screenshot previews area — shows all platforms */}
+      <div className="relative h-[280px] flex items-end justify-center px-4 pt-5 pb-4 overflow-hidden bg-surface-900/50">
         {/* Subtle gradient behind */}
         <div className="absolute inset-0 opacity-30" style={{ background: app.cardGradient }} />
 
-        {/* Mini screenshots — like App Store listing */}
-        <div className="relative z-10 flex items-end gap-2.5">
-          {iphoneShots.map((screenshot, i) => {
-            const yOff = i === 1 || i === 2 ? -6 : 0;
-            return (
-              <MiniScreenshotPreview
-                key={i}
-                screenshot={screenshot}
-                template={template}
-                accentColor={app.accentColor}
-                width={100}
-                style={{ transform: `translateY(${yOff}px)` }}
-              />
-            );
-          })}
+        {/* Multi-platform previews */}
+        <div className="relative z-10 flex items-end gap-2">
+          {representativeShots.map((screenshot) => (
+            <MiniScreenshotPreview
+              key={screenshot.device}
+              screenshot={screenshot}
+              template={template}
+              accentColor={app.accentColor}
+              width={screenshot.device === 'mac' ? 120 : screenshot.device === 'watch' ? 75 : 100}
+              device={screenshot.device}
+            />
+          ))}
         </div>
       </div>
 
@@ -530,6 +616,11 @@ function ShowcaseCard({ app, onUse }: { app: ShowcaseApp; onUse: () => void }) {
               <span key={d} className="text-[9px] text-white/25">{deviceLabels[d]}</span>
             ))}
             <span className="text-[9px] text-white/20">&middot; {app.screenshots.length} screens</span>
+            {template && (
+              <span className="rounded-full px-2 py-0.5 text-[9px] font-medium bg-white/5 text-white/30 ring-1 ring-white/5">
+                {template.name}
+              </span>
+            )}
           </div>
         </div>
         <button
@@ -550,6 +641,10 @@ function TemplateGallerySection({
 }: {
   onCreateFromTemplate: (templateId: string) => void;
 }) {
+  // Build lookup: templateId → showcase app that uses it
+  const templateToShowcase = new Map<string, ShowcaseApp>();
+  showcaseApps.forEach((app) => templateToShowcase.set(app.templateId, app));
+
   const [filter, setFilter] = useState<string>('all');
   const categories = [
     { label: 'All', value: 'all' },
@@ -599,6 +694,7 @@ function TemplateGallerySection({
               key={template.id}
               template={template}
               onUse={() => onCreateFromTemplate(template.id)}
+              showcaseApp={templateToShowcase.get(template.id)}
             />
           ))}
         </div>
@@ -659,9 +755,11 @@ function MiniAppScreen({ accent }: { accent: string }) {
 function TemplateGalleryCard({
   template,
   onUse,
+  showcaseApp,
 }: {
   template: DesignTemplate;
   onUse: () => void;
+  showcaseApp?: ShowcaseApp;
 }) {
   const getBgCss = (): string => {
     if (template.background.type === 'solid') return template.background.solidColor;
@@ -804,6 +902,14 @@ function TemplateGalleryCard({
           </div>
         )}
       </div>
+
+      {/* Showcase app badge */}
+      {showcaseApp && (
+        <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1 rounded-full bg-black/30 backdrop-blur-sm px-2 py-0.5 ring-1 ring-white/10">
+          <span className="text-[9px]">{showcaseApp.icon}</span>
+          <span className="text-[8px] text-white/50">{showcaseApp.name}</span>
+        </div>
+      )}
 
       {/* Hover overlay */}
       <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
