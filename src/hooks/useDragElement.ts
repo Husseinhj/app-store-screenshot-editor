@@ -40,6 +40,15 @@ function computeSnapGuides(
     snapTargetsH.push(t, b, cy);
   }
 
+  // Add user-created guide lines as snap targets
+  for (const guide of state.userGuides) {
+    if (guide.type === 'vertical') {
+      snapTargetsV.push(guide.position);
+    } else {
+      snapTargetsH.push(guide.position);
+    }
+  }
+
   // For the first dragged element, compute its edges and check snapping
   const firstId = dragIds[0];
   const firstEl = screenshot.elements.find((e) => e.id === firstId);

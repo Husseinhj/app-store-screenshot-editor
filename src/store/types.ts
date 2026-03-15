@@ -89,6 +89,12 @@ export interface CustomFrame {
 
 export type ScreenshotFit = 'contain' | 'cover' | 'fill' | 'stretch';
 
+export interface UserGuide {
+  id: string;
+  type: 'horizontal' | 'vertical';
+  position: number; // 0–100 percentage of canvas dimension
+}
+
 export interface DeviceFrameElement extends BaseElement {
   type: 'device-frame';
   device: DeviceType;

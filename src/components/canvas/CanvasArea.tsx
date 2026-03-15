@@ -3,10 +3,10 @@ import { ScreenshotCard } from './ScreenshotCard';
 import { InteractiveCanvas } from './InteractiveCanvas';
 import { getExportSizesForPlatform } from '@/lib/exportSizes';
 import { platformLabels } from '@/lib/devices';
-import { ImagePlus, Grid2x2, Layers, Monitor, Ruler } from 'lucide-react';
-import { Rulers, RULER_SIZE } from './Rulers';
+import { ImagePlus, Grid2x2, Layers, Monitor } from 'lucide-react';
+import { WorkspaceRulers, RULER_SIZE } from './Rulers';
 import type { CanvasView, Platform, Screenshot } from '@/store/types';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const allPlatforms: Platform[] = ['iphone', 'ipad', 'mac', 'apple-watch'];
 
@@ -30,6 +30,7 @@ export function CanvasArea() {
 
   const zoomFactor = zoom / 100;
   const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -107,10 +108,10 @@ export function CanvasArea() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedElementIds, removeElement]);
 
-  // Trackpad zoom (pinch)
+  // Trackpad zoom (pinch) — on wrapper to catch events even over ruler overlays
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
     const handleWheel = (e: WheelEvent) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
@@ -120,8 +121,8 @@ export function CanvasArea() {
         useProjectStore.getState().setZoom(newZoom);
       }
     };
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    return () => container.removeEventListener('wheel', handleWheel);
+    wrapper.addEventListener('wheel', handleWheel, { passive: false });
+    return () => wrapper.removeEventListener('wheel', handleWheel);
   }, []);
 
   // Paste text
@@ -205,46 +206,61 @@ export function CanvasArea() {
         )}
       </div>
 
-      <div
-        ref={containerRef}
-        className="flex-1 overflow-auto p-6"
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={handleDrop}
-        onClick={(e) => {
-          const target = e.target as HTMLElement;
-          if (target === e.currentTarget || target.dataset.canvasOuter === 'true') {
-            useProjectStore.getState().selectElement(null);
-            useProjectStore.getState().setEditingTextElement(null);
-          }
-        }}
-      >
-        {canvasView === 'single' && (
-          <SingleView
-            screenshot={selectedScreenshot ?? null}
+      {/* Wrapper for scrollable area + ruler overlay */}
+      <div ref={wrapperRef} className="flex-1 relative overflow-hidden">
+        <div
+          ref={containerRef}
+          className="absolute inset-0 overflow-auto"
+          style={{ top: RULER_SIZE, left: RULER_SIZE }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
+          onClick={(e) => {
+            const target = e.target as HTMLElement;
+            if (target === e.currentTarget || target.dataset.canvasOuter === 'true') {
+              useProjectStore.getState().selectElement(null);
+              useProjectStore.getState().setEditingTextElement(null);
+            }
+          }}
+        >
+          <div className="p-6">
+          {canvasView === 'single' && (
+            <SingleView
+              screenshot={selectedScreenshot ?? null}
+              exportSize={exportSize}
+              zoomFactor={zoomFactor}
+            />
+          )}
+          {canvasView === 'platform-grid' && (
+            <PlatformGridView
+              screenshots={screenshots}
+              exportSize={exportSize}
+              selectedId={project.selectedScreenshotId}
+              onSelect={selectScreenshot}
+              onDoubleClick={(id) => { selectScreenshot(id); setCanvasView('single'); }}
+              zoomFactor={zoomFactor}
+            />
+          )}
+          {canvasView === 'all-platforms' && (
+            <AllPlatformsView
+              project={project}
+              selectedId={project.selectedScreenshotId}
+              onSelect={selectScreenshot}
+              onDoubleClick={(id, platform) => {
+                useProjectStore.getState().setPlatform(platform);
+                selectScreenshot(id);
+                setCanvasView('single');
+              }}
+              zoomFactor={zoomFactor}
+            />
+          )}
+          </div>
+        </div>
+
+        {/* Ruler overlay — sits on top of the scroll area, not inside it */}
+        {canvasView === 'single' && selectedScreenshot && (
+          <WorkspaceRulersWrapper
+            containerRef={containerRef}
             exportSize={exportSize}
-            zoomFactor={zoomFactor}
-          />
-        )}
-        {canvasView === 'platform-grid' && (
-          <PlatformGridView
-            screenshots={screenshots}
-            exportSize={exportSize}
-            selectedId={project.selectedScreenshotId}
-            onSelect={selectScreenshot}
-            onDoubleClick={(id) => { selectScreenshot(id); setCanvasView('single'); }}
-            zoomFactor={zoomFactor}
-          />
-        )}
-        {canvasView === 'all-platforms' && (
-          <AllPlatformsView
-            project={project}
-            selectedId={project.selectedScreenshotId}
-            onSelect={selectScreenshot}
-            onDoubleClick={(id, platform) => {
-              useProjectStore.getState().setPlatform(platform);
-              selectScreenshot(id);
-              setCanvasView('single');
-            }}
             zoomFactor={zoomFactor}
           />
         )}
@@ -316,49 +332,35 @@ function SingleView({
   return (
     <div className="flex flex-col items-center justify-center min-h-full" data-canvas-outer="true">
       <div
+        data-canvas-origin="true"
         className="relative"
         style={{
-          width: previewWidth * zoomFactor + RULER_SIZE,
-          height: previewHeight * zoomFactor + RULER_SIZE,
+          width: previewWidth * zoomFactor,
+          height: previewHeight * zoomFactor,
         }}
       >
-        {/* Rulers */}
-        <Rulers canvasWidth={exportSize.width} canvasHeight={exportSize.height} scale={scale} />
-
-        {/* Canvas area offset by ruler size */}
+        {/* Visual frame with rounded corners and shadow */}
         <div
-          className="relative"
+          className="absolute inset-0 rounded-xl overflow-hidden"
           style={{
-            position: 'absolute',
-            top: RULER_SIZE,
-            left: RULER_SIZE,
-            width: previewWidth * zoomFactor,
-            height: previewHeight * zoomFactor,
+            boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 25px 80px rgba(0,0,0,0.5)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div
+          style={{
+            width: exportSize.width,
+            height: exportSize.height,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
           }}
         >
-          {/* Visual frame with rounded corners and shadow */}
-          <div
-            className="absolute inset-0 rounded-xl overflow-hidden"
-            style={{
-              boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 25px 80px rgba(0,0,0,0.5)',
-              pointerEvents: 'none',
-            }}
+          <InteractiveCanvas
+            screenshot={screenshot}
+            width={exportSize.width}
+            height={exportSize.height}
+            scale={scale}
           />
-          <div
-            style={{
-              width: exportSize.width,
-              height: exportSize.height,
-              transform: `scale(${scale})`,
-              transformOrigin: 'top left',
-            }}
-          >
-            <InteractiveCanvas
-              screenshot={screenshot}
-              width={exportSize.width}
-              height={exportSize.height}
-              scale={scale}
-            />
-          </div>
         </div>
       </div>
       <div className="mt-3 text-[11px] text-white/30">
@@ -424,6 +426,118 @@ function PlatformGridView({
         </div>
       ))}
     </div>
+  );
+}
+
+// ─── Workspace Rulers Wrapper ────────────────────────────────────────────────
+function WorkspaceRulersWrapper({
+  containerRef,
+  exportSize,
+  zoomFactor,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  exportSize: { width: number; height: number; label: string };
+  zoomFactor: number;
+}) {
+  const maxPreviewHeight = 560;
+  const maxPreviewWidth = 420;
+  const aspectRatio = exportSize.width / exportSize.height;
+
+  let previewWidth: number;
+  let previewHeight: number;
+
+  if (aspectRatio > 1) {
+    previewWidth = Math.min(maxPreviewWidth * 1.5, 680);
+    previewHeight = previewWidth / aspectRatio;
+    if (previewHeight > maxPreviewHeight) {
+      previewHeight = maxPreviewHeight;
+      previewWidth = previewHeight * aspectRatio;
+    }
+  } else {
+    previewHeight = maxPreviewHeight;
+    previewWidth = previewHeight * aspectRatio;
+    if (previewWidth > maxPreviewWidth) {
+      previewWidth = maxPreviewWidth;
+      previewHeight = previewWidth / aspectRatio;
+    }
+  }
+
+  const scale = (previewWidth / exportSize.width) * zoomFactor;
+  const canvasScreenW = exportSize.width * scale;
+  const canvasScreenH = exportSize.height * scale;
+
+  // We dynamically measure the canvas position using a data attribute on the canvas wrapper.
+
+  return (
+    <WorkspaceRulersWithMeasure
+      containerRef={containerRef}
+      scale={scale}
+      canvasWidth={exportSize.width}
+      canvasHeight={exportSize.height}
+    />
+  );
+}
+
+function WorkspaceRulersWithMeasure({
+  containerRef,
+  scale,
+  canvasWidth,
+  canvasHeight,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  scale: number;
+  canvasWidth: number;
+  canvasHeight: number;
+}) {
+  const [offsets, setOffsets] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const measure = () => {
+      // Find the canvas wrapper by data attribute
+      const canvasEl = container.querySelector('[data-canvas-origin]') as HTMLElement | null;
+      if (!canvasEl) return;
+
+      // Get position relative to container's scroll content
+      const containerRect = container.getBoundingClientRect();
+      const canvasRect = canvasEl.getBoundingClientRect();
+
+      // Position of the canvas origin in the scroll content coordinate space
+      const offsetX = canvasRect.left - containerRect.left + container.scrollLeft;
+      const offsetY = canvasRect.top - containerRect.top + container.scrollTop;
+
+      setOffsets({ x: offsetX, y: offsetY });
+    };
+
+    measure();
+
+    // Re-measure on scroll and resize
+    container.addEventListener('scroll', measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+
+    // Also observe mutations for when canvas appears
+    const mutObserver = new MutationObserver(measure);
+    mutObserver.observe(container, { childList: true, subtree: true });
+
+    return () => {
+      container.removeEventListener('scroll', measure);
+      observer.disconnect();
+      mutObserver.disconnect();
+    };
+  }, [containerRef, scale]);
+
+  return (
+    <WorkspaceRulers
+      containerRef={containerRef}
+      canvasOffsetX={offsets.x}
+      canvasOffsetY={offsets.y}
+      scale={scale}
+      canvasWidth={canvasWidth}
+      canvasHeight={canvasHeight}
+    />
   );
 }
 

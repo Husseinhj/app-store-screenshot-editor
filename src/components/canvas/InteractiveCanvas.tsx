@@ -6,7 +6,9 @@ import { CanvasElementRenderer } from './CanvasElementRenderer';
 import { SelectionBox } from './SelectionBox';
 import { InlineTextEditor } from './InlineTextEditor';
 import { SnapGuides } from './SnapGuides';
+import { UserGuides } from './UserGuides';
 import { useDragElement } from '@/hooks/useDragElement';
+import { useDragScreenshot } from '@/hooks/useDragScreenshot';
 import { useResizeElement } from '@/hooks/useResizeElement';
 import { useRotateElement } from '@/hooks/useRotateElement';
 
@@ -184,6 +186,7 @@ export function InteractiveCanvas({ screenshot, width, height, scale }: Props) {
 
         {/* Snap guides */}
         <SnapGuides canvasWidth={width} canvasHeight={height} />
+        <UserGuides canvasWidth={width} canvasHeight={height} scale={scale} />
 
         {/* Marquee selection rectangle */}
         {marqueeRect && (
@@ -254,6 +257,11 @@ function ElementWithInteraction({
     },
   });
 
+  const { handleScreenshotMouseDown } = useDragScreenshot({
+    elementId,
+    scale,
+  });
+
   // Get element transform from store to position the hit target
   const element = useProjectStore((s) => {
     for (const platform of ['iphone', 'ipad', 'mac', 'apple-watch'] as const) {
@@ -287,6 +295,12 @@ function ElementWithInteraction({
       {!isEditing && (
         <div
           onMouseDown={(e) => {
+            // Alt+drag on device-frame with screenshot → reposition screenshot
+            if (e.altKey && element.type === 'device-frame' && (element as any).screenshotImageUrl) {
+              if (!isSelected) selectElement(elementId);
+              handleScreenshotMouseDown(e);
+              return;
+            }
             if (e.shiftKey || e.ctrlKey || e.metaKey) {
               // Multi-select toggle
               e.stopPropagation();

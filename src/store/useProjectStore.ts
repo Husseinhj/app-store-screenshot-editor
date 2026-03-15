@@ -22,8 +22,10 @@ import type {
   ShapeElement,
   ShapeType,
   TextElement,
+  UserGuide,
 } from './types';
 import { devices, devicesByPlatform, getOrientedFrameDimensions } from '@/lib/devices';
+import { getExportSizesForPlatform } from '@/lib/exportSizes';
 import {
   createDefaultDeviceFrameElement,
   createDefaultImageElement,
@@ -186,6 +188,12 @@ interface ProjectStore {
   // Snap guides (transient, not persisted)
   snapGuides: { type: 'horizontal' | 'vertical'; position: number }[];
   setSnapGuides: (guides: { type: 'horizontal' | 'vertical'; position: number }[]) => void;
+
+  // User-created guide lines (persisted)
+  userGuides: UserGuide[];
+  addUserGuide: (guide: UserGuide) => void;
+  updateUserGuide: (id: string, position: number) => void;
+  removeUserGuide: (id: string) => void;
 
   // Getters
   getSelectedScreenshot: () => Screenshot | null;
@@ -589,19 +597,34 @@ export const useProjectStore = create<ProjectStore>()(
           if (updates.orientation && updates.orientation !== el.orientation) {
             const def = devices[el.device];
             if (def) {
-              const oldOriented = getOrientedFrameDimensions(def, el.orientation);
               const newOriented = getOrientedFrameDimensions(def, updates.orientation);
-              const oldAspect = oldOriented.frameWidth / oldOriented.frameHeight;
               const newAspect = newOriented.frameWidth / newOriented.frameHeight;
 
-              // Preserve center point and height, adjust width for new aspect ratio
+              // Get canvas dimensions for percentage↔pixel math
+              const exportSizes = getExportSizesForPlatform(state.project.platform);
+              const exportSize = exportSizes[state.exportSizeIndex] ?? exportSizes[0];
+              const canvasW = exportSize.width;
+              const canvasH = exportSize.height;
+
+              // Current visual dimensions in pixels
+              const oldVisualW = (el.transform.width / 100) * canvasW;
+              const oldVisualH = (el.transform.height / 100) * canvasH;
+              const oldArea = oldVisualW * oldVisualH;
+
+              // New dimensions preserving visual area
+              const newVisualH = Math.sqrt(oldArea / newAspect);
+              const newVisualW = newAspect * newVisualH;
+
+              const newWidthPct = (newVisualW / canvasW) * 100;
+              const newHeightPct = (newVisualH / canvasH) * 100;
+
+              // Recenter both axes
               const centerX = el.transform.x + el.transform.width / 2;
               const centerY = el.transform.y + el.transform.height / 2;
-
-              // Scale width relative to aspect ratio change
-              const newWidth = el.transform.width * (newAspect / oldAspect);
-              el.transform.width = newWidth;
-              el.transform.x = centerX - newWidth / 2;
+              el.transform.width = newWidthPct;
+              el.transform.height = newHeightPct;
+              el.transform.x = centerX - newWidthPct / 2;
+              el.transform.y = centerY - newHeightPct / 2;
             }
           }
 
@@ -756,6 +779,18 @@ export const useProjectStore = create<ProjectStore>()(
 
       snapGuides: [],
       setSnapGuides: (guides) => set({ snapGuides: guides }),
+
+      // ─── User guides (persistent) ─────────────────────────────────────
+
+      userGuides: [],
+      addUserGuide: (guide) => set(produce((s: ProjectStore) => { s.userGuides.push(guide); })),
+      updateUserGuide: (id, position) => set(produce((s: ProjectStore) => {
+        const g = s.userGuides.find((g) => g.id === id);
+        if (g) g.position = position;
+      })),
+      removeUserGuide: (id) => set(produce((s: ProjectStore) => {
+        s.userGuides = s.userGuides.filter((g) => g.id !== id);
+      })),
 
       // ─── Getters ───────────────────────────────────────────────────────
 
@@ -981,6 +1016,7 @@ export const useProjectStore = create<ProjectStore>()(
         appView: state.appView,
         projectList: state.projectList,
         activeProjectId: state.activeProjectId,
+        userGuides: state.userGuides,
         // Note: clipboard, snapGuides, selectedElementIds, editingTextElementId are NOT persisted
       }),
     }

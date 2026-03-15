@@ -235,7 +235,7 @@ export function ColorPickerWithAlpha({ color, onChange, label }: Props) {
   return (
     <div>
       {label && <label className="mb-1 block text-[10px] text-white/40">{label}</label>}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <button
           ref={swatchRef}
           onClick={() => setOpen(!open)}
@@ -255,12 +255,12 @@ export function ColorPickerWithAlpha({ color, onChange, label }: Props) {
           onChange={(e) => setTextValue(e.target.value)}
           onBlur={handleTextCommit}
           onKeyDown={(e) => e.key === 'Enter' && handleTextCommit()}
-          className="w-32 rounded-lg bg-surface-700 px-2 py-1.5 text-[11px] text-white outline-none ring-1 ring-white/10 focus:ring-accent/50 font-mono"
+          className="min-w-0 flex-1 rounded-lg bg-surface-700 px-2 py-1.5 text-[11px] text-white outline-none ring-1 ring-white/10 focus:ring-accent/50 font-mono"
         />
         <select
           value={format}
           onChange={(e) => setFormat(e.target.value as ColorFormat)}
-          className="rounded-lg bg-surface-700 px-1 py-1.5 text-[10px] text-white/60 outline-none ring-1 ring-white/10 cursor-pointer"
+          className="shrink-0 rounded-lg bg-surface-700 px-1 py-1.5 text-[10px] text-white/60 outline-none ring-1 ring-white/10 cursor-pointer"
         >
           <option value="hex">HEX</option>
           <option value="rgba">RGBA</option>
