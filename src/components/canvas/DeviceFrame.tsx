@@ -6,6 +6,7 @@ interface Props {
   device: DeviceType;
   screenshotUrl: string | null;
   maxHeight: number;
+  maxWidth?: number;
   frameStyle?: FrameStyle;
   frameColorVariant?: string;
   showFrame?: boolean;
@@ -46,10 +47,37 @@ function getScreenshotImgStyle(
   };
 }
 
+/** Clamp maxHeight so the device fits within maxWidth too (if provided) */
+function constrainMaxHeight(def: DeviceDefinition, maxHeight: number, maxWidth?: number, orientation?: Orientation): number {
+  if (!maxWidth) return maxHeight;
+
+  // Use SVG viewBox dimensions if available (more accurate for SVG rendering)
+  const vb = def.svgViewBox;
+  const isPortraitIpad = def.platform === 'ipad' && orientation === 'portrait';
+
+  let deviceAspect: number;
+  if (vb && isPortraitIpad) {
+    // Portrait iPad: SVG is landscape, rotated 90° → container is portrait (h×w)
+    deviceAspect = vb.height / vb.width; // swapped
+  } else if (vb) {
+    deviceAspect = vb.width / vb.height;
+  } else {
+    const oriented = isPortraitIpad
+      ? getOrientedFrameDimensions(def, 'portrait')
+      : def;
+    deviceAspect = oriented.frameWidth / oriented.frameHeight;
+  }
+
+  // What height would produce a frame exactly maxWidth wide?
+  const heightForMaxWidth = maxWidth / deviceAspect;
+  return Math.min(maxHeight, heightForMaxWidth);
+}
+
 export function DeviceFrame({
   device,
   screenshotUrl,
-  maxHeight,
+  maxHeight: rawMaxHeight,
+  maxWidth,
   frameStyle = 'svg',
   frameColorVariant = 'default',
   showFrame = true,
@@ -62,6 +90,9 @@ export function DeviceFrame({
   const def = devices[device];
   const colors = getFrameColors(def, frameColorVariant);
   const imgStyle = getScreenshotImgStyle(screenshotFit, screenshotOffset, screenshotScale);
+
+  // Constrain height so device also fits within maxWidth
+  const maxHeight = constrainMaxHeight(def, rawMaxHeight, maxWidth, orientation);
 
   // Custom frame rendering
   if (customFrame && showFrame) {
@@ -122,6 +153,7 @@ function SvgFrame({
 
   // iPad SVGs are landscape-native. For portrait, we rotate the whole frame 90° CW.
   // The outer container becomes portrait-shaped (swapped width/height).
+  // Note: maxHeight is already constrained by maxWidth via constrainMaxHeight()
   const scale = isPortraitIpad
     ? maxHeight / vb.width  // portrait: container height maps to SVG width (the shorter dim)
     : maxHeight / vb.height;

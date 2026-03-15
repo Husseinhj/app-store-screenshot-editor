@@ -46,19 +46,22 @@ export function CanvasElementRenderer({ element, canvasWidth, canvasHeight }: Pr
       }}
     >
       {element.type === 'device-frame' && (
-        <DeviceFrame
-          device={element.device}
-          screenshotUrl={element.screenshotImageUrl}
-          maxHeight={pixelH}
-          frameStyle={element.frameStyle}
-          frameColorVariant={element.frameColorVariant}
-          showFrame={element.showDeviceFrame}
-          orientation={element.orientation}
-          customFrame={element.customFrameId ? customFrames.find((f) => f.id === element.customFrameId) ?? null : null}
-          screenshotFit={element.screenshotFit}
-          screenshotOffset={element.screenshotOffset}
-          screenshotScale={element.screenshotScale}
-        />
+        <div className="flex items-start justify-center" style={{ width: pixelW, height: pixelH }}>
+          <DeviceFrame
+            device={element.device}
+            screenshotUrl={element.screenshotImageUrl}
+            maxHeight={pixelH}
+            maxWidth={pixelW}
+            frameStyle={element.frameStyle}
+            frameColorVariant={element.frameColorVariant}
+            showFrame={element.showDeviceFrame}
+            orientation={element.orientation}
+            customFrame={element.customFrameId ? customFrames.find((f) => f.id === element.customFrameId) ?? null : null}
+            screenshotFit={element.screenshotFit}
+            screenshotOffset={element.screenshotOffset}
+            screenshotScale={element.screenshotScale}
+          />
+        </div>
       )}
       {element.type === 'text' && element.id !== editingTextElementId && (
         <div
