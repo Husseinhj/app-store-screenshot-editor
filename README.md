@@ -1,6 +1,6 @@
 # App Store Screenshot Editor
 
-A browser-based visual editor for designing App Store and Play Store screenshots. Built with React, TypeScript, and Tailwind CSS.
+A browser-based visual editor for designing App Store and Play Store screenshots, plus a full **App Icon Generator** for all Apple platforms. Built with React, TypeScript, and Tailwind CSS.
 
 **[Live Demo](https://husseinhj.github.io/app-store-screenshot-editor/)**
 
@@ -8,6 +8,7 @@ A browser-based visual editor for designing App Store and Play Store screenshots
 
 ## Features
 
+### Screenshot Editor
 - **Multi-Platform Support** — Design screenshots for iPhone, iPad, Mac, and Apple Watch
 - **Device Mockups** — Realistic device frames (iPhone 16 Pro, iPad Pro, MacBook, Apple Watch Ultra, and more)
 - **Canvas Editor** — Drag-and-drop elements with snap guides, rulers, and alignment tools
@@ -19,8 +20,19 @@ A browser-based visual editor for designing App Store and Play Store screenshots
 - **Layers Panel** — Drag-to-reorder, visibility toggle, lock, and group management
 - **App Store Preview** — Full-screen simulation of how screenshots appear on the actual App Store
 - **Batch Export** — Export individual screenshots or all platforms as ZIP
+
+### App Icon Generator
+- **All Apple Platforms** — iOS, iPadOS, macOS, watchOS, and visionOS
+- **Interactive Canvas** — Drag, resize, and position elements directly on a 1024×1024 canvas
+- **Design Guidelines** — Built-in overlays for Apple safe zones, grid, and circle-safe guides
+- **Padding & Spacing Controls** — Quick padding slider, center, and fill-to-canvas actions
+- **Platform Previews** — Live previews with correct masks (squircle for iOS/macOS, circle for watchOS/visionOS)
+- **Xcode-Ready Export** — Exports a ZIP with `AppIcon.appiconset` folder and `Contents.json`, ready to drag into Xcode
+
+### General
 - **Undo/Redo** — Full history with keyboard shortcuts
 - **Persistent Projects** — Auto-saved to localStorage with multi-project support
+- **PWA Support** — Installable as a standalone app with offline caching
 
 ## Getting Started
 
@@ -43,7 +55,7 @@ npm run build
 - **Vite** for building and dev server
 - **Tiptap** for rich text editing
 - **Lucide** for icons
-- **JSZip** + html-to-image for export
+- **JSZip** + html2canvas-pro for export
 
 ## Keyboard Shortcuts
 
