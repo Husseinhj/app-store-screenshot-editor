@@ -35,7 +35,7 @@ import {
   createDefaultTextElement,
   createEmojiTextElement,
 } from '@/lib/elements';
-import { designTemplates } from '@/lib/templates';
+import { designTemplates, getElementTransformForPlatform } from '@/lib/templates';
 
 const allPlatforms: Platform[] = ['iphone', 'ipad', 'mac', 'apple-watch'];
 
@@ -884,10 +884,10 @@ export const useProjectStore = create<ProjectStore>()(
 
           // Build new elements from template specs
           let deviceIndex = 0;
-          const newElements: CanvasElement[] = template.elements.map((spec) => {
+          const newElements: CanvasElement[] = template.elements.map((spec, specIndex) => {
             const base = {
               id: nanoid(),
-              transform: { ...spec.transform },
+              transform: getElementTransformForPlatform(template, specIndex, platform),
               zIndex: spec.zIndex,
               locked: false,
               visible: true,

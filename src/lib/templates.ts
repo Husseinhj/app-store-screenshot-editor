@@ -1,4 +1,4 @@
-import type { BackgroundConfig, CanvasElementType, ElementTransform, TextEffects, GradientStop, ShapeType } from '@/store/types';
+import type { BackgroundConfig, CanvasElementType, ElementTransform, TextEffects, GradientStop, ShapeType, Platform } from '@/store/types';
 
 export interface TemplateElementSpec {
   type: CanvasElementType;
@@ -32,6 +32,12 @@ export interface TemplateElementSpec {
 
 export type TemplateCategory = 'bold' | 'minimal' | 'editorial' | 'playful' | 'dark';
 
+/**
+ * Per-element transform overrides for non-iPhone platforms.
+ * Key = element index in the `elements` array, value = partial transform override.
+ */
+export type PlatformTransformOverrides = Record<number, Partial<ElementTransform>>;
+
 export interface DesignTemplate {
   id: string;
   name: string;
@@ -39,6 +45,24 @@ export interface DesignTemplate {
   category: TemplateCategory;
   background: BackgroundConfig;
   elements: TemplateElementSpec[];
+  /** Platform-specific element transform overrides (iPad, Mac, Watch). iPhone uses defaults. */
+  platformOverrides?: Partial<Record<Platform, PlatformTransformOverrides>>;
+}
+
+/**
+ * Resolve an element's transform for a given platform.
+ * Merges base transform with any platform-specific overrides.
+ */
+export function getElementTransformForPlatform(
+  template: DesignTemplate,
+  elementIndex: number,
+  platform: Platform,
+): ElementTransform {
+  const base = template.elements[elementIndex].transform;
+  if (platform === 'iphone' || !template.platformOverrides) return { ...base };
+  const overrides = template.platformOverrides[platform]?.[elementIndex];
+  if (!overrides) return { ...base };
+  return { ...base, ...overrides };
 }
 
 // ─── Template Definitions ────────────────────────────────────────────────────
@@ -92,6 +116,11 @@ export const designTemplates: DesignTemplate[] = [
         device: { device: 'auto', showDeviceFrame: true },
       },
     ],
+    platformOverrides: {
+      ipad:           { 0: { y: 4, height: 10 }, 1: { y: 14 }, 2: { x: 15, y: 28, width: 70, height: 65 } },
+      mac:            { 0: { x: 5, y: 15, width: 35, height: 25 }, 1: { x: 5, y: 40, width: 35 }, 2: { x: 45, y: 5, width: 52, height: 90 } },
+      'apple-watch':  { 0: { y: 5, height: 15 }, 1: { y: 20, height: 8 }, 2: { x: 15, y: 32, width: 70, height: 62 } },
+    },
   },
 
   // 2. popArt
@@ -155,6 +184,11 @@ export const designTemplates: DesignTemplate[] = [
         shape: { shapeType: 'circle', fillColor: '#9b5de5', strokeColor: 'transparent', strokeWidth: 0, borderRadius: 999 },
       },
     ],
+    platformOverrides: {
+      ipad:           { 0: { y: 4, height: 12 }, 1: { y: 16 }, 2: { x: 18, y: 28, width: 64, height: 65, rotation: 3 } },
+      mac:            { 0: { x: 5, y: 12, width: 40, height: 20 }, 1: { x: 5, y: 32, width: 40 }, 2: { x: 48, y: 5, width: 50, height: 90, rotation: 0 }, 3: { x: 80, y: 50 }, 4: { x: -5, y: 60 } },
+      'apple-watch':  { 0: { y: 5, height: 18 }, 1: { y: 22 }, 2: { x: 18, y: 35, width: 64, height: 58, rotation: 0 } },
+    },
   },
 
   // 3. cardStack
@@ -217,6 +251,11 @@ export const designTemplates: DesignTemplate[] = [
         device: { device: 'auto', showDeviceFrame: true },
       },
     ],
+    platformOverrides: {
+      ipad:           { 0: { y: 4 }, 1: { y: 14 }, 2: { x: 18, y: 22, width: 60, height: 68 }, 3: { x: 15, y: 20, width: 60, height: 68 }, 4: { x: 22, y: 24, width: 56, height: 65 } },
+      mac:            { 0: { x: 5, y: 15, width: 35 }, 1: { x: 5, y: 30, width: 35 }, 2: { x: 43, y: 8, width: 55, height: 84 }, 3: { x: 40, y: 6, width: 55, height: 84 }, 4: { x: 45, y: 10, width: 52, height: 80 } },
+      'apple-watch':  { 0: { y: 5 }, 1: { y: 18 }, 2: { x: 20, y: 30, width: 60, height: 60 }, 3: { x: 18, y: 28, width: 60, height: 60 }, 4: { x: 22, y: 32, width: 56, height: 58 } },
+    },
   },
 
   // 4. midnightSapphire
@@ -273,6 +312,11 @@ export const designTemplates: DesignTemplate[] = [
         device: { device: 'auto', showDeviceFrame: true },
       },
     ],
+    platformOverrides: {
+      ipad:           { 0: { y: 5 }, 1: { y: 16 }, 2: { x: 14, y: 24, width: 72, height: 70 }, 3: { x: 20, y: 28, width: 60, height: 65 } },
+      mac:            { 0: { x: 5, y: 15, width: 35 }, 1: { x: 5, y: 35, width: 35 }, 2: { x: 42, y: 5, width: 55, height: 90 }, 3: { x: 45, y: 8, width: 52, height: 84 } },
+      'apple-watch':  { 0: { y: 5, height: 15 }, 1: { y: 22 }, 2: { x: 15, y: 30, width: 70, height: 62 }, 3: { x: 18, y: 32, width: 64, height: 58 } },
+    },
   },
 
   // 5. editorial
@@ -323,6 +367,12 @@ export const designTemplates: DesignTemplate[] = [
         device: { device: 'auto', showDeviceFrame: true },
       },
     ],
+    platformOverrides: {
+      // editorial: text-left, device-right on all platforms — just adjust proportions
+      ipad:           { 0: { x: 5, y: 10, width: 42, height: 20 }, 1: { x: 5, y: 30, width: 42 }, 2: { x: 50, y: 5, width: 48, height: 90 } },
+      mac:            { 0: { x: 5, y: 12, width: 38, height: 30 }, 1: { x: 5, y: 45, width: 38 }, 2: { x: 48, y: 5, width: 50, height: 90 } },
+      'apple-watch':  { 0: { x: 8, y: 5, width: 84, height: 18 }, 1: { x: 8, y: 24, width: 84 }, 2: { x: 15, y: 35, width: 70, height: 60 } },
+    },
   },
 
   // 6. storyCard
@@ -379,6 +429,11 @@ export const designTemplates: DesignTemplate[] = [
         },
       },
     ],
+    platformOverrides: {
+      ipad:           { 0: { x: 8, y: 4, width: 84, height: 92 }, 1: { x: 12, y: 8, width: 76 }, 2: { x: 15, y: 22, width: 70, height: 55 }, 3: { y: 80 } },
+      mac:            { 0: { x: 5, y: 5, width: 90, height: 90 }, 1: { x: 8, y: 8, width: 35 }, 2: { x: 48, y: 12, width: 48, height: 76 }, 3: { x: 8, y: 28, width: 35 } },
+      'apple-watch':  { 0: { x: 5, y: 3, width: 90, height: 94 }, 1: { x: 10, y: 6, width: 80 }, 2: { x: 15, y: 25, width: 70, height: 50 }, 3: { y: 78 } },
+    },
   },
 
   // 7. glassMorphism
@@ -442,6 +497,11 @@ export const designTemplates: DesignTemplate[] = [
         device: { device: 'auto', showDeviceFrame: true },
       },
     ],
+    platformOverrides: {
+      ipad:           { 0: { x: 8, y: 3, width: 84, height: 20 }, 1: { x: 10, y: 6, width: 80 }, 2: { x: 12, y: 15, width: 76 }, 3: { x: 15, y: 30, width: 70, height: 62 } },
+      mac:            { 0: { x: 5, y: 5, width: 35, height: 30 }, 1: { x: 7, y: 8, width: 30 }, 2: { x: 7, y: 16, width: 30 }, 3: { x: 42, y: 5, width: 55, height: 90 } },
+      'apple-watch':  { 0: { x: 8, y: 3, width: 84, height: 22 }, 1: { x: 10, y: 6, width: 80 }, 2: { x: 12, y: 15, width: 76 }, 3: { x: 15, y: 32, width: 70, height: 60 } },
+    },
   },
 
   // 8. minimal
@@ -494,6 +554,11 @@ export const designTemplates: DesignTemplate[] = [
         device: { device: 'auto', showDeviceFrame: true },
       },
     ],
+    platformOverrides: {
+      ipad:           { 0: { y: 5 }, 1: { y: 15 }, 2: { x: 20, y: 28, width: 60, height: 65 } },
+      mac:            { 0: { x: 5, y: 18, width: 35 }, 1: { x: 5, y: 38, width: 35 }, 2: { x: 45, y: 5, width: 52, height: 90 } },
+      'apple-watch':  { 0: { y: 5 }, 1: { y: 18 }, 2: { x: 20, y: 30, width: 60, height: 60 } },
+    },
   },
 
   // 9. modern
@@ -553,6 +618,11 @@ export const designTemplates: DesignTemplate[] = [
         device: { device: 'auto', showDeviceFrame: true },
       },
     ],
+    platformOverrides: {
+      ipad:           { 0: { y: 4 }, 1: { y: 15 }, 2: { x: 10, y: 25, width: 80, height: 70 } },
+      mac:            { 0: { x: 5, y: 12, width: 35 }, 1: { x: 5, y: 32, width: 35 }, 2: { x: 42, y: 3, width: 56, height: 94 } },
+      'apple-watch':  { 0: { y: 5 }, 1: { y: 20 }, 2: { x: 10, y: 30, width: 80, height: 65 } },
+    },
   },
 
   // 10. anime
@@ -622,6 +692,11 @@ export const designTemplates: DesignTemplate[] = [
         shape: { shapeType: 'circle', fillColor: 'rgba(255,255,255,0.5)', strokeColor: 'transparent', strokeWidth: 0, borderRadius: 999 },
       },
     ],
+    platformOverrides: {
+      ipad:           { 0: { y: 4 }, 1: { y: 16 }, 2: { x: 18, y: 28, width: 64, height: 65, rotation: -2 } },
+      mac:            { 0: { x: 5, y: 10, width: 40 }, 1: { x: 5, y: 30, width: 40 }, 2: { x: 48, y: 5, width: 50, height: 90, rotation: 0 }, 3: { x: 85, y: 3 }, 4: { x: 2, y: 12 }, 5: { x: 88, y: 40 } },
+      'apple-watch':  { 0: { y: 5 }, 1: { y: 22 }, 2: { x: 18, y: 32, width: 64, height: 58, rotation: 0 } },
+    },
   },
 
   // 11. material3
@@ -684,5 +759,10 @@ export const designTemplates: DesignTemplate[] = [
         device: { device: 'auto', showDeviceFrame: true },
       },
     ],
+    platformOverrides: {
+      ipad:           { 2: { y: 5 }, 3: { y: 16 }, 4: { x: 18, y: 28, width: 64, height: 62 } },
+      mac:            { 0: { x: -5, y: -5, width: 40, height: 30 }, 1: { x: 75, y: 65, width: 35, height: 25 }, 2: { x: 5, y: 15, width: 35 }, 3: { x: 5, y: 32, width: 35 }, 4: { x: 45, y: 5, width: 52, height: 90 } },
+      'apple-watch':  { 2: { y: 5 }, 3: { y: 18 }, 4: { x: 18, y: 30, width: 64, height: 60 } },
+    },
   },
 ];

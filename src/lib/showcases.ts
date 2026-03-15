@@ -40,8 +40,10 @@ export const showcaseApps: ShowcaseApp[] = [
     cardGradient: 'linear-gradient(135deg, #7c3aed, #4f46e5, #6366f1)',
     screenshots: [
       { headline: 'Share Your Story', subtitle: 'Beautiful moments shared', screenBg: 'linear-gradient(180deg, #7c3aed 0%, #4338ca 100%)', textColor: '#ffffff', device: 'iphone' },
-      { headline: 'Stay Connected', subtitle: 'Real-time messaging', screenBg: 'linear-gradient(180deg, #6d28d9 0%, #4f46e5 100%)', textColor: '#ffffff', device: 'ipad' },
       { headline: 'Discover Trends', subtitle: 'See what\'s trending', screenBg: 'linear-gradient(180deg, #5b21b6 0%, #3730a3 100%)', textColor: '#ffffff', device: 'iphone' },
+      { headline: 'Direct Messages', subtitle: 'Chat with friends', screenBg: 'linear-gradient(180deg, #6d28d9 0%, #4f46e5 100%)', textColor: '#ffffff', device: 'iphone' },
+      { headline: 'Stay Connected', subtitle: 'Real-time messaging', screenBg: 'linear-gradient(180deg, #6d28d9 0%, #4f46e5 100%)', textColor: '#ffffff', device: 'ipad' },
+      { headline: 'Social Dashboard', subtitle: 'All your feeds in one place', screenBg: 'linear-gradient(180deg, #4c1d95 0%, #3730a3 100%)', textColor: '#ffffff', device: 'mac' },
       { headline: 'Go Live', subtitle: 'Stream to the world', screenBg: 'linear-gradient(180deg, #4c1d95 0%, #312e81 100%)', textColor: '#ffffff', device: 'watch' },
     ],
   },
@@ -57,8 +59,10 @@ export const showcaseApps: ShowcaseApp[] = [
     cardGradient: 'linear-gradient(135deg, #f0fdf4, #d1fae5, #a7f3d0)',
     screenshots: [
       { headline: 'Browse Collections', subtitle: 'Curated picks for you', screenBg: 'linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%)', textColor: '#1a1a1a', device: 'iphone' },
-      { headline: 'Desktop Shopping', subtitle: 'Full catalog experience', screenBg: 'linear-gradient(180deg, #f0fdf4 0%, #d1fae5 100%)', textColor: '#1a1a1a', device: 'mac' },
       { headline: 'One-Tap Checkout', subtitle: 'Fast & secure', screenBg: 'linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%)', textColor: '#1a1a1a', device: 'iphone' },
+      { headline: 'Wishlist & Favorites', subtitle: 'Save for later', screenBg: 'linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 100%)', textColor: '#1a1a1a', device: 'iphone' },
+      { headline: 'Tablet Shopping', subtitle: 'Immersive catalog view', screenBg: 'linear-gradient(180deg, #f0fdf4 0%, #d1fae5 100%)', textColor: '#1a1a1a', device: 'ipad' },
+      { headline: 'Desktop Shopping', subtitle: 'Full catalog experience', screenBg: 'linear-gradient(180deg, #f0fdf4 0%, #d1fae5 100%)', textColor: '#1a1a1a', device: 'mac' },
       { headline: 'Order Status', subtitle: 'Quick glance updates', screenBg: 'linear-gradient(180deg, #d1fae5 0%, #a7f3d0 100%)', textColor: '#1a1a1a', device: 'watch' },
     ],
   },
@@ -74,9 +78,11 @@ export const showcaseApps: ShowcaseApp[] = [
     cardGradient: 'linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899)',
     screenshots: [
       { headline: 'Enter the Realm', subtitle: 'Endless adventure', screenBg: 'linear-gradient(180deg, #06b6d4 0%, #8b5cf6 100%)', textColor: '#ffffff', device: 'iphone' },
-      { headline: 'Battle Legends', subtitle: 'Challenge worldwide', screenBg: 'linear-gradient(180deg, #8b5cf6 0%, #ec4899 100%)', textColor: '#ffffff', device: 'ipad' },
       { headline: 'Collect & Evolve', subtitle: 'Unique characters', screenBg: 'linear-gradient(180deg, #6366f1 0%, #ec4899 100%)', textColor: '#ffffff', device: 'iphone' },
+      { headline: 'Guild Wars', subtitle: 'Team up & conquer', screenBg: 'linear-gradient(180deg, #8b5cf6 0%, #06b6d4 100%)', textColor: '#ffffff', device: 'iphone' },
+      { headline: 'Battle Legends', subtitle: 'Challenge worldwide', screenBg: 'linear-gradient(180deg, #8b5cf6 0%, #ec4899 100%)', textColor: '#ffffff', device: 'ipad' },
       { headline: 'Desktop Arena', subtitle: 'Full-screen battles', screenBg: 'linear-gradient(180deg, #7c3aed 0%, #db2777 100%)', textColor: '#ffffff', device: 'mac' },
+      { headline: 'Quest Timer', subtitle: 'Never miss a raid', screenBg: 'linear-gradient(180deg, #06b6d4 0%, #6366f1 100%)', textColor: '#ffffff', device: 'watch' },
     ],
   },
   {
@@ -91,8 +97,10 @@ export const showcaseApps: ShowcaseApp[] = [
     cardGradient: 'linear-gradient(135deg, #0f172a, #1e3a5f, #172554)',
     screenshots: [
       { headline: 'Smart Portfolio', subtitle: 'AI-powered insights', screenBg: 'linear-gradient(180deg, #0f172a 0%, #1e3a5f 100%)', textColor: '#e2e8f0', device: 'iphone' },
-      { headline: 'Pro Trading', subtitle: 'Advanced charts', screenBg: 'linear-gradient(180deg, #172554 0%, #1e40af 100%)', textColor: '#e2e8f0', device: 'mac' },
+      { headline: 'Watchlist', subtitle: 'Track your favorites', screenBg: 'linear-gradient(180deg, #172554 0%, #0f172a 100%)', textColor: '#e2e8f0', device: 'iphone' },
+      { headline: 'Market News', subtitle: 'Stay informed', screenBg: 'linear-gradient(180deg, #1e3a5f 0%, #172554 100%)', textColor: '#e2e8f0', device: 'iphone' },
       { headline: 'Real-Time Markets', subtitle: 'Live data', screenBg: 'linear-gradient(180deg, #1e3a5f 0%, #0f172a 100%)', textColor: '#e2e8f0', device: 'ipad' },
+      { headline: 'Pro Trading', subtitle: 'Advanced charts', screenBg: 'linear-gradient(180deg, #172554 0%, #1e40af 100%)', textColor: '#e2e8f0', device: 'mac' },
       { headline: 'Price Alerts', subtitle: 'Never miss a move', screenBg: 'linear-gradient(180deg, #0c4a6e 0%, #0f172a 100%)', textColor: '#e2e8f0', device: 'watch' },
     ],
   },
@@ -109,8 +117,10 @@ export const showcaseApps: ShowcaseApp[] = [
     screenshots: [
       { headline: 'Book in Seconds', subtitle: 'Tap, ride, arrive', screenBg: 'linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%)', textColor: '#ffffff', device: 'iphone' },
       { headline: 'Live Tracking', subtitle: 'Know your ride', screenBg: 'linear-gradient(180deg, #111827 0%, #0a0a0a 100%)', textColor: '#ffffff', device: 'iphone' },
-      { headline: 'Ride Status', subtitle: 'ETA on your wrist', screenBg: 'linear-gradient(180deg, #1a1a2e 0%, #0a0a0a 100%)', textColor: '#f59e0b', device: 'watch' },
+      { headline: 'Ride History', subtitle: 'All your trips', screenBg: 'linear-gradient(180deg, #1a1a2e 0%, #111827 100%)', textColor: '#ffffff', device: 'iphone' },
       { headline: 'Split the Fare', subtitle: 'Easy payments', screenBg: 'linear-gradient(180deg, #1f2937 0%, #0a0a0a 100%)', textColor: '#ffffff', device: 'ipad' },
+      { headline: 'Fleet Manager', subtitle: 'Desktop control center', screenBg: 'linear-gradient(180deg, #0a0a0a 0%, #111827 100%)', textColor: '#ffffff', device: 'mac' },
+      { headline: 'Ride Status', subtitle: 'ETA on your wrist', screenBg: 'linear-gradient(180deg, #1a1a2e 0%, #0a0a0a 100%)', textColor: '#f59e0b', device: 'watch' },
     ],
   },
 ];
