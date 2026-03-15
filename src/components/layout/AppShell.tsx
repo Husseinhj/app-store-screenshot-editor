@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { LeftPanel } from './LeftPanel';
 import { RightPanel } from './RightPanel';
 import { Toolbar } from './Toolbar';
@@ -10,11 +11,21 @@ import { useProjectStore } from '@/store/useProjectStore';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef, useCallback } from 'react';
 
+const AppIconEditor = lazy(() => import('../icons/AppIconEditor').then((m) => ({ default: m.AppIconEditor })));
+
 export function AppShell() {
   const appView = useProjectStore((s) => s.appView);
 
   if (appView === 'home') {
     return <HomePage />;
+  }
+
+  if (appView === 'app-icons') {
+    return (
+      <Suspense fallback={<div className="flex h-screen items-center justify-center bg-surface-900 text-white/40">Loading…</div>}>
+        <AppIconEditor />
+      </Suspense>
+    );
   }
 
   return <EditorLayout />;

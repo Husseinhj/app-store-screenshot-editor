@@ -4,6 +4,7 @@ import { temporal } from 'zundo';
 import { produce } from 'immer';
 import { nanoid } from 'nanoid';
 import type {
+  AppIconProject,
   AppView,
   BackgroundConfig,
   BaseElement,
@@ -13,6 +14,7 @@ import type {
   DeviceFrameElement,
   DeviceType,
   ElementTransform,
+  IconPlatform,
   ImageElement,
   Platform,
   Project,
@@ -200,6 +202,10 @@ interface ProjectStore {
   snapGuides: { type: 'horizontal' | 'vertical'; position: number }[];
   setSnapGuides: (guides: { type: 'horizontal' | 'vertical'; position: number }[]) => void;
 
+  // Icon snap guides (transient, not persisted)
+  iconSnapGuides: { type: 'horizontal' | 'vertical'; position: number }[];
+  setIconSnapGuides: (guides: { type: 'horizontal' | 'vertical'; position: number }[]) => void;
+
   // User-created guide lines (persisted)
   userGuides: UserGuide[];
   addUserGuide: (guide: UserGuide) => void;
@@ -222,6 +228,21 @@ interface ProjectStore {
 
   // Template actions
   applyTemplate: (templateId: string) => void;
+
+  // App Icon Editor
+  appIconProject: AppIconProject;
+  selectedAppIconElementIds: string[];
+  openAppIconEditor: () => void;
+  closeAppIconEditor: () => void;
+  setAppIconBackground: (updates: Partial<BackgroundConfig>) => void;
+  addAppIconElement: (element: CanvasElement) => void;
+  removeAppIconElement: (elementId: string) => void;
+  updateAppIconElement: (elementId: string, updates: Partial<CanvasElement>) => void;
+  updateAppIconElementTransform: (elementId: string, transform: Partial<ElementTransform>) => void;
+  setAppIconSelectedPlatforms: (platforms: IconPlatform[]) => void;
+  selectAppIconElement: (elementId: string | null) => void;
+  selectAppIconElements: (elementIds: string[]) => void;
+  removeSelectedAppIconElements: () => void;
 
   // Getters
   getSelectedScreenshot: () => Screenshot | null;
@@ -283,6 +304,27 @@ export const useProjectStore = create<ProjectStore>()(
       // ─── App Store Preview ────────────────────────────────────────────
       showAppStorePreview: false,
       previewPlatform: 'iphone' as Platform,
+
+      // ─── App Icon Editor ────────────────────────────────────────────────
+      appIconProject: {
+        id: nanoid(),
+        name: 'My App Icon',
+        background: {
+          type: 'gradient',
+          solidColor: '#0d99ff',
+          gradient: {
+            angle: 135,
+            stops: [
+              { color: '#0d99ff', position: 0 },
+              { color: '#5b6abf', position: 100 },
+            ],
+          },
+          imageUrl: null,
+        },
+        elements: [],
+        selectedPlatforms: ['ios', 'ipados', 'macos'] as IconPlatform[],
+      },
+      selectedAppIconElementIds: [] as string[],
 
       // ─── Multi-project actions ──────────────────────────────────────────
 
@@ -888,6 +930,9 @@ export const useProjectStore = create<ProjectStore>()(
       snapGuides: [],
       setSnapGuides: (guides) => set({ snapGuides: guides }),
 
+      iconSnapGuides: [],
+      setIconSnapGuides: (guides) => set({ iconSnapGuides: guides }),
+
       // ─── User guides (persistent) ─────────────────────────────────────
 
       userGuides: [],
@@ -1169,6 +1214,58 @@ export const useProjectStore = create<ProjectStore>()(
           state.selectedElementIds = [];
         })),
 
+      // ─── App Icon Editor ──────────────────────────────────────────────
+
+      openAppIconEditor: () => set({ appView: 'app-icons' }),
+      closeAppIconEditor: () => set({ appView: 'home' }),
+
+      setAppIconBackground: (updates) =>
+        set(produce((state: ProjectStore) => {
+          Object.assign(state.appIconProject.background, updates);
+        })),
+
+      addAppIconElement: (element) =>
+        set(produce((state: ProjectStore) => {
+          state.appIconProject.elements.push(element);
+          state.selectedAppIconElementIds = [element.id];
+        })),
+
+      removeAppIconElement: (elementId) =>
+        set(produce((state: ProjectStore) => {
+          state.appIconProject.elements = state.appIconProject.elements.filter((e) => e.id !== elementId);
+          state.selectedAppIconElementIds = state.selectedAppIconElementIds.filter((id) => id !== elementId);
+        })),
+
+      updateAppIconElement: (elementId, updates) =>
+        set(produce((state: ProjectStore) => {
+          const el = state.appIconProject.elements.find((e) => e.id === elementId);
+          if (el) Object.assign(el, updates);
+        })),
+
+      updateAppIconElementTransform: (elementId, transform) =>
+        set(produce((state: ProjectStore) => {
+          const el = state.appIconProject.elements.find((e) => e.id === elementId);
+          if (el) Object.assign(el.transform, transform);
+        })),
+
+      setAppIconSelectedPlatforms: (platforms) =>
+        set(produce((state: ProjectStore) => {
+          state.appIconProject.selectedPlatforms = platforms;
+        })),
+
+      selectAppIconElement: (elementId) =>
+        set({ selectedAppIconElementIds: elementId ? [elementId] : [] }),
+
+      selectAppIconElements: (elementIds) =>
+        set({ selectedAppIconElementIds: elementIds }),
+
+      removeSelectedAppIconElements: () =>
+        set(produce((state: ProjectStore) => {
+          const ids = state.selectedAppIconElementIds;
+          state.appIconProject.elements = state.appIconProject.elements.filter((e) => !ids.includes(e.id));
+          state.selectedAppIconElementIds = [];
+        })),
+
       // ─── Getters ───────────────────────────────────────────────────────
 
       getSelectedScreenshot: () => {
@@ -1214,7 +1311,7 @@ export const useProjectStore = create<ProjectStore>()(
     ),
     {
       name: 'app-store-screenshot-editor',
-      version: 8,
+      version: 9,
       migrate: (persisted: any, version: number) => {
         if (version < 2) {
           // Migrate from v1 (flat Screenshot fields) to v2 (elements array)
@@ -1382,6 +1479,9 @@ export const useProjectStore = create<ProjectStore>()(
           // Migrate from v7 to v8: add effects to text elements (no data needed, just version bump)
           // TextEffects are optional, so no migration of existing data required
         }
+        if (version < 9) {
+          // Migrate from v8 to v9: add app icon project (no existing data to migrate)
+        }
         return persisted;
       },
       partialize: (state) => ({
@@ -1399,6 +1499,7 @@ export const useProjectStore = create<ProjectStore>()(
         activeProjectId: state.activeProjectId,
         userGuides: state.userGuides,
         activeGuidelinePresetId: state.activeGuidelinePresetId,
+        appIconProject: state.appIconProject,
         // Note: clipboard, snapGuides, selectedElementIds, editingTextElementId are NOT persisted
       }),
     }

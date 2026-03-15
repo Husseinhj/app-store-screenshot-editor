@@ -192,4 +192,14 @@ export interface ProjectMeta {
   thumbnailDataUrl: string | null;
 }
 
-export type AppView = 'home' | 'editor';
+export type AppView = 'home' | 'editor' | 'app-icons';
+
+export type IconPlatform = 'ios' | 'ipados' | 'macos' | 'watchos' | 'visionos';
+
+export interface AppIconProject {
+  id: string;
+  name: string;
+  background: BackgroundConfig;
+  elements: CanvasElement[];
+  selectedPlatforms: IconPlatform[];
+}

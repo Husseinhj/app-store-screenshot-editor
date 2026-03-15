@@ -17,6 +17,7 @@ import {
   Smartphone,
   ChevronLeft,
   ChevronRight,
+  Gem,
 } from 'lucide-react';
 import type { Platform, DeviceType } from '@/store/types';
 
@@ -39,7 +40,7 @@ const platformIcon = (p: Platform) =>
 
 // ─── Hero Section ──────────────────────────────────────────────────────────────
 
-function HeroSection({ onNewProject }: { onNewProject: () => void }) {
+function HeroSection({ onNewProject, onOpenIconEditor }: { onNewProject: () => void; onOpenIconEditor: () => void }) {
   return (
     <section className="relative overflow-hidden px-6 py-16 sm:py-24 text-center">
       {/* Animated gradient background */}
@@ -76,6 +77,13 @@ function HeroSection({ onNewProject }: { onNewProject: () => void }) {
           >
             <Plus size={16} />
             New Project
+          </button>
+          <button
+            onClick={onOpenIconEditor}
+            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/90 hover:bg-white/10 transition-colors"
+          >
+            <Gem size={18} />
+            App Icon Generator
           </button>
           <a
             href="#templates"
@@ -941,6 +949,7 @@ export function HomePage() {
   const [newDialogTemplate, setNewDialogTemplate] = useState<string | undefined>();
   const createProject = useProjectStore((s) => s.createProject);
   const applyTemplate = useProjectStore((s) => s.applyTemplate);
+  const openAppIconEditor = useProjectStore((s) => s.openAppIconEditor);
 
   const handleCreateFromShowcase = (app: ShowcaseApp) => {
     // Map showcase device types to platform keys
@@ -1038,7 +1047,7 @@ export function HomePage() {
 
       {/* Page content */}
       <main className="flex-1">
-        <HeroSection onNewProject={() => setShowNew(true)} />
+        <HeroSection onNewProject={() => setShowNew(true)} onOpenIconEditor={openAppIconEditor} />
         <ShowcaseSection onCreateFromShowcase={handleCreateFromShowcase} />
         <TemplateGallerySection onCreateFromTemplate={handleCreateFromTemplate} />
         <YourProjectsSection onNewProject={() => setShowNew(true)} />
