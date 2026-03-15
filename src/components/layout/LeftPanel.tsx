@@ -1,6 +1,7 @@
 import { ProjectPanel } from '../sidebar/ProjectPanel';
 import { LayerPanel } from '../sidebar/LayerPanel';
 import { AddElementsPanel } from '../sidebar/AddElementsPanel';
+import { TemplatePanel } from '../sidebar/TemplatePanel';
 import { ExportPanel } from '../sidebar/ExportPanel';
 import { ChevronLeft } from 'lucide-react';
 
@@ -29,6 +30,7 @@ export function LeftPanel({ style, onCollapse }: Props) {
       <ProjectPanel />
       <LayerPanel />
       <AddElementsPanel />
+      <TemplatePanel />
       <ExportPanel />
     </div>
   );

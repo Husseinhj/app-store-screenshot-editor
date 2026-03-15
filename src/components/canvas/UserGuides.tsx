@@ -18,6 +18,13 @@ export function UserGuides({ canvasWidth, canvasHeight, scale }: Props) {
   const dash = `${8 / scale} ${5 / scale}`;  // dash pattern in screen pixels
   const extend = 9999 / scale;  // line extension beyond canvas
 
+  // Scale-compensated font size for labels
+  const labelFontSize = 10 / scale;
+  const labelPadX = 4 / scale;
+  const labelPadY = 2 / scale;
+  const labelOffset = 6 / scale;
+  const labelBgRx = 3 / scale;
+
   return (
     <svg
       style={{
@@ -60,6 +67,29 @@ export function UserGuides({ canvasWidth, canvasHeight, scale }: Props) {
                   removeUserGuide(guide.id);
                 }}
               />
+              {/* Label */}
+              {guide.label && (
+                <g transform={`translate(${x + labelOffset}, ${labelOffset})`}>
+                  <rect
+                    x={0}
+                    y={0}
+                    width={guide.label.length * labelFontSize * 0.6 + labelPadX * 2}
+                    height={labelFontSize + labelPadY * 2}
+                    rx={labelBgRx}
+                    fill="rgba(249,115,22,0.85)"
+                  />
+                  <text
+                    x={labelPadX}
+                    y={labelFontSize + labelPadY - labelFontSize * 0.15}
+                    fontSize={labelFontSize}
+                    fontFamily="Inter, sans-serif"
+                    fill="#ffffff"
+                    fontWeight={500}
+                  >
+                    {guide.label}
+                  </text>
+                </g>
+              )}
             </g>
           );
         } else {
@@ -91,6 +121,29 @@ export function UserGuides({ canvasWidth, canvasHeight, scale }: Props) {
                   removeUserGuide(guide.id);
                 }}
               />
+              {/* Label */}
+              {guide.label && (
+                <g transform={`translate(${labelOffset}, ${y - labelFontSize - labelPadY * 2 - labelOffset})`}>
+                  <rect
+                    x={0}
+                    y={0}
+                    width={guide.label.length * labelFontSize * 0.6 + labelPadX * 2}
+                    height={labelFontSize + labelPadY * 2}
+                    rx={labelBgRx}
+                    fill="rgba(249,115,22,0.85)"
+                  />
+                  <text
+                    x={labelPadX}
+                    y={labelFontSize + labelPadY - labelFontSize * 0.15}
+                    fontSize={labelFontSize}
+                    fontFamily="Inter, sans-serif"
+                    fill="#ffffff"
+                    fontWeight={500}
+                  >
+                    {guide.label}
+                  </text>
+                </g>
+              )}
             </g>
           );
         }

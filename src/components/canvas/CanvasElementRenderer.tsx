@@ -1,4 +1,4 @@
-import type { CanvasElement } from '@/store/types';
+import type { CanvasElement, TextElement } from '@/store/types';
 import { useProjectStore } from '@/store/useProjectStore';
 import { DeviceFrame } from './DeviceFrame';
 import { HeadlineText } from './HeadlineText';
@@ -76,6 +76,7 @@ export function CanvasElementRenderer({ element, canvasWidth, canvasHeight }: Pr
               lineHeight: element.lineHeight,
             }}
             maxWidth={pixelW}
+            effects={(element as TextElement).effects}
           />
         </div>
       )}

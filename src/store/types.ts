@@ -29,6 +29,15 @@ export interface GradientStop {
   position: number; // 0-100
 }
 
+export interface TextEffects {
+  shadow?: { offsetX: number; offsetY: number; blur: number; color: string };
+  glow?: { blur: number; color: string };
+  stroke?: { width: number; color: string };
+  gradientFill?: { angle: number; stops: GradientStop[] };
+  letterSpacing?: number;
+  opacity?: number;
+}
+
 export interface GradientConfig {
   angle: number; // 0-360
   stops: GradientStop[];
@@ -93,6 +102,7 @@ export interface UserGuide {
   id: string;
   type: 'horizontal' | 'vertical';
   position: number; // 0–100 percentage of canvas dimension
+  label?: string;
 }
 
 export interface DeviceFrameElement extends BaseElement {
@@ -118,6 +128,7 @@ export interface TextElement extends BaseElement {
   color: string;
   alignment: 'left' | 'center' | 'right';
   lineHeight: number;
+  effects?: TextEffects;
 }
 
 export interface ImageElement extends BaseElement {

@@ -8,6 +8,7 @@ import FontFamily from '@tiptap/extension-font-family';
 import TextAlign from '@tiptap/extension-text-align';
 import UnderlineExt from '@tiptap/extension-underline';
 import { FontSize } from '@/lib/tiptap-font-size';
+import { getTextEffectStyles } from '@/lib/textEffects';
 import type { TextElement } from '@/store/types';
 
 interface Props {
@@ -63,6 +64,7 @@ export function InlineTextEditor({ element, pixelWidth, pixelHeight }: Props) {
         lineHeight: element.lineHeight,
         overflow: 'hidden',
         cursor: 'text',
+        ...getTextEffectStyles(element.effects),
       }}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}

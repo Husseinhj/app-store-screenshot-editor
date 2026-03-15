@@ -1,11 +1,13 @@
-import type { TextConfig } from '@/store/types';
+import type { TextConfig, TextEffects } from '@/store/types';
+import { getTextEffectStyles } from '@/lib/textEffects';
 
 interface Props {
   text: TextConfig;
   maxWidth: number;
+  effects?: TextEffects;
 }
 
-export function HeadlineText({ text, maxWidth }: Props) {
+export function HeadlineText({ text, maxWidth, effects }: Props) {
   // Check if content contains HTML tags (rich text)
   const isHtml = /<[a-z][\s\S]*>/i.test(text.content);
 
@@ -23,6 +25,7 @@ export function HeadlineText({ text, maxWidth }: Props) {
         width: '100%',
         wordWrap: 'break-word',
         whiteSpace: 'pre-wrap',
+        ...getTextEffectStyles(effects),
       }}
       {...(isHtml
         ? { dangerouslySetInnerHTML: { __html: text.content } }

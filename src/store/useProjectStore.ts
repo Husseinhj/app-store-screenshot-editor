@@ -26,6 +26,8 @@ import type {
 } from './types';
 import { devices, devicesByPlatform, getOrientedFrameDimensions } from '@/lib/devices';
 import { getExportSizesForPlatform } from '@/lib/exportSizes';
+import { textStylePresets } from '@/lib/textStylePresets';
+import { guidelinePresets } from '@/lib/guidelinePresets';
 import {
   createDefaultDeviceFrameElement,
   createDefaultImageElement,
@@ -33,6 +35,7 @@ import {
   createDefaultTextElement,
   createEmojiTextElement,
 } from '@/lib/elements';
+import { designTemplates } from '@/lib/templates';
 
 const allPlatforms: Platform[] = ['iphone', 'ipad', 'mac', 'apple-watch'];
 
@@ -194,6 +197,15 @@ interface ProjectStore {
   addUserGuide: (guide: UserGuide) => void;
   updateUserGuide: (id: string, position: number) => void;
   removeUserGuide: (id: string) => void;
+
+  // Preset actions
+  applyTextStylePreset: (elementId: string, presetId: string) => void;
+  applyGuidelinePreset: (presetId: string) => void;
+  clearAllUserGuides: () => void;
+  activeGuidelinePresetId: string | null;
+
+  // Template actions
+  applyTemplate: (templateId: string) => void;
 
   // Getters
   getSelectedScreenshot: () => Screenshot | null;
@@ -792,6 +804,173 @@ export const useProjectStore = create<ProjectStore>()(
         s.userGuides = s.userGuides.filter((g) => g.id !== id);
       })),
 
+      // ─── Preset actions ────────────────────────────────────────────────
+
+      activeGuidelinePresetId: null,
+
+      applyTextStylePreset: (elementId, presetId) => {
+        const preset = textStylePresets.find((p) => p.id === presetId);
+        if (!preset) return;
+        set(produce((state: ProjectStore) => {
+          const s = findScreenshotWithElement(state.project, elementId);
+          if (!s) return;
+          const el = s.elements.find((e) => e.id === elementId);
+          if (!el || el.type !== 'text') return;
+          el.fontFamily = preset.fontFamily;
+          el.fontWeight = preset.fontWeight;
+          el.color = preset.color;
+          el.lineHeight = preset.lineHeight;
+          el.effects = preset.effects ? { ...preset.effects } : undefined;
+          if (preset.letterSpacing !== undefined) {
+            if (!el.effects) el.effects = {};
+            el.effects.letterSpacing = preset.letterSpacing;
+          }
+        }));
+      },
+
+      applyGuidelinePreset: (presetId) => {
+        const preset = guidelinePresets.find((p) => p.id === presetId);
+        if (!preset) return;
+        set(produce((state: ProjectStore) => {
+          state.userGuides = preset.guides.map((g) => ({
+            id: nanoid(),
+            type: g.type,
+            position: g.position,
+            label: g.label,
+          }));
+          state.activeGuidelinePresetId = presetId;
+        }));
+      },
+
+      clearAllUserGuides: () => set(produce((state: ProjectStore) => {
+        state.userGuides = [];
+        state.activeGuidelinePresetId = null;
+      })),
+
+      // ─── Template ────────────────────────────────────────────────────
+
+      applyTemplate: (templateId) =>
+        set(produce((state: ProjectStore) => {
+          const template = designTemplates.find((t) => t.id === templateId);
+          if (!template) return;
+          const platform = state.project.platform;
+          const s = getPlatformScreenshots(state.project).find(
+            (s) => s.id === state.project.selectedScreenshotId
+          );
+          if (!s) return;
+
+          // Collect existing screenshot URLs from device-frame elements
+          const existingUrls = s.elements
+            .filter((e): e is DeviceFrameElement => e.type === 'device-frame')
+            .map((e) => e.screenshotImageUrl);
+
+          // Choose default device for current platform
+          const defaultDeviceMap: Record<Platform, DeviceType> = {
+            iphone: 'iphone-17-pro-max',
+            ipad: 'ipad-pro-13',
+            mac: 'macbook-pro',
+            'apple-watch': 'apple-watch-s11-46',
+          };
+          const defaultDevice = defaultDeviceMap[platform];
+
+          // Font size scale by platform
+          const fontScaleMap: Record<Platform, number> = {
+            iphone: 1,
+            ipad: 1.2,
+            mac: 0.7,
+            'apple-watch': 0.4,
+          };
+          const fontScale = fontScaleMap[platform];
+
+          // Build new elements from template specs
+          let deviceIndex = 0;
+          const newElements: CanvasElement[] = template.elements.map((spec) => {
+            const base = {
+              id: nanoid(),
+              transform: { ...spec.transform },
+              zIndex: spec.zIndex,
+              locked: false,
+              visible: true,
+              flipX: false,
+              flipY: false,
+            };
+
+            if (spec.type === 'device-frame' && spec.device) {
+              const el: DeviceFrameElement = {
+                ...base,
+                type: 'device-frame',
+                device: defaultDevice,
+                frameStyle: 'svg',
+                frameColorVariant: 'default',
+                showDeviceFrame: spec.device.showDeviceFrame,
+                orientation: 'portrait',
+                screenshotImageUrl: existingUrls[deviceIndex] ?? null,
+                screenshotFit: 'contain',
+                screenshotOffset: { x: 0, y: 0 },
+                screenshotScale: 1,
+              };
+              deviceIndex++;
+              return el;
+            }
+
+            if (spec.type === 'text' && spec.text) {
+              const el: TextElement = {
+                ...base,
+                type: 'text',
+                content: spec.text.content,
+                fontFamily: spec.text.fontFamily,
+                fontSize: Math.round(spec.text.fontSize * fontScale),
+                fontWeight: spec.text.fontWeight,
+                color: spec.text.color,
+                alignment: spec.text.alignment,
+                lineHeight: spec.text.lineHeight,
+                effects: spec.text.effects ? { ...spec.text.effects } : undefined,
+              };
+              return el;
+            }
+
+            if (spec.type === 'shape' && spec.shape) {
+              const el: ShapeElement = {
+                ...base,
+                type: 'shape',
+                shapeType: spec.shape.shapeType,
+                fillColor: spec.shape.fillColor,
+                strokeColor: spec.shape.strokeColor,
+                strokeWidth: spec.shape.strokeWidth,
+                borderRadius: spec.shape.borderRadius,
+              };
+              return el;
+            }
+
+            // Fallback — should not happen with well-formed templates
+            const el: TextElement = {
+              ...base,
+              type: 'text',
+              content: '<p>Element</p>',
+              fontFamily: 'Inter',
+              fontSize: Math.round(48 * fontScale),
+              fontWeight: 400,
+              color: '#ffffff',
+              alignment: 'center',
+              lineHeight: 1.2,
+            };
+            return el;
+          });
+
+          // Apply template background and elements
+          s.background = {
+            type: template.background.type,
+            solidColor: template.background.solidColor,
+            gradient: {
+              angle: template.background.gradient.angle,
+              stops: template.background.gradient.stops.map((stop) => ({ ...stop })),
+            },
+            imageUrl: template.background.imageUrl,
+          };
+          s.elements = newElements;
+          state.selectedElementIds = [];
+        })),
+
       // ─── Getters ───────────────────────────────────────────────────────
 
       getSelectedScreenshot: () => {
@@ -837,7 +1016,7 @@ export const useProjectStore = create<ProjectStore>()(
     ),
     {
       name: 'app-store-screenshot-editor',
-      version: 7,
+      version: 8,
       migrate: (persisted: any, version: number) => {
         if (version < 2) {
           // Migrate from v1 (flat Screenshot fields) to v2 (elements array)
@@ -1001,6 +1180,10 @@ export const useProjectStore = create<ProjectStore>()(
             }
           }
         }
+        if (version < 8) {
+          // Migrate from v7 to v8: add effects to text elements (no data needed, just version bump)
+          // TextEffects are optional, so no migration of existing data required
+        }
         return persisted;
       },
       partialize: (state) => ({
@@ -1017,6 +1200,7 @@ export const useProjectStore = create<ProjectStore>()(
         projectList: state.projectList,
         activeProjectId: state.activeProjectId,
         userGuides: state.userGuides,
+        activeGuidelinePresetId: state.activeGuidelinePresetId,
         // Note: clipboard, snapGuides, selectedElementIds, editingTextElementId are NOT persisted
       }),
     }

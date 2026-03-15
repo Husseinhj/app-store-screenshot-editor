@@ -1,10 +1,10 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useProjectStore } from '@/store/useProjectStore';
 import { fonts, fontWeights } from '@/lib/fonts';
 import { SidebarSection } from './SidebarSection';
 import { ColorPickerWithAlpha } from '../common/ColorPickerWithAlpha';
-import { AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline as UnderlineIcon } from 'lucide-react';
-import type { TextElement } from '@/store/types';
+import { AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline as UnderlineIcon, ChevronDown, ChevronRight } from 'lucide-react';
+import type { TextElement, TextEffects } from '@/store/types';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Color } from '@tiptap/extension-color';
@@ -230,6 +230,312 @@ export function TextPanel({ element }: Props) {
           onChange={(color) => setColorForSelection(color)}
         />
       </div>
+
+      {/* ─── Effects ─────────────────────────────────────────────────── */}
+      <TextEffectsSection element={element} updateTextElement={updateTextElement} />
     </SidebarSection>
+  );
+}
+
+// ─── Text Effects Sub-Section ──────────────────────────────────────────────
+
+function TextEffectsSection({
+  element,
+  updateTextElement,
+}: {
+  element: TextElement;
+  updateTextElement: (id: string, updates: Partial<Omit<TextElement, 'id' | 'type' | 'transform' | 'zIndex' | 'locked' | 'visible' | 'flipX' | 'flipY'>>) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const effects = element.effects ?? {};
+
+  const setEffects = (patch: Partial<TextEffects>) => {
+    updateTextElement(element.id, { effects: { ...effects, ...patch } });
+  };
+
+  const clearEffect = (key: keyof TextEffects) => {
+    const next = { ...effects };
+    delete next[key];
+    updateTextElement(element.id, { effects: next });
+  };
+
+  return (
+    <div className="mt-3 border-t border-white/5 pt-3">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center gap-1 text-[11px] font-medium text-white/60 hover:text-white/80"
+      >
+        {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+        Effects
+      </button>
+
+      {expanded && (
+        <div className="mt-2 space-y-3">
+          {/* Shadow */}
+          <EffectToggle
+            label="Shadow"
+            enabled={!!effects.shadow}
+            onToggle={(on) =>
+              on
+                ? setEffects({ shadow: { offsetX: 2, offsetY: 2, blur: 4, color: 'rgba(0,0,0,0.5)' } })
+                : clearEffect('shadow')
+            }
+          >
+            {effects.shadow && (
+              <div className="mt-1.5 space-y-1.5">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="mb-0.5 block text-[10px] text-white/40">Offset X</label>
+                    <input
+                      type="range"
+                      min={-20}
+                      max={20}
+                      value={effects.shadow.offsetX}
+                      onChange={(e) =>
+                        setEffects({ shadow: { ...effects.shadow!, offsetX: Number(e.target.value) } })
+                      }
+                      className="w-full accent-accent"
+                    />
+                    <span className="text-[10px] text-white/40">{effects.shadow.offsetX}px</span>
+                  </div>
+                  <div>
+                    <label className="mb-0.5 block text-[10px] text-white/40">Offset Y</label>
+                    <input
+                      type="range"
+                      min={-20}
+                      max={20}
+                      value={effects.shadow.offsetY}
+                      onChange={(e) =>
+                        setEffects({ shadow: { ...effects.shadow!, offsetY: Number(e.target.value) } })
+                      }
+                      className="w-full accent-accent"
+                    />
+                    <span className="text-[10px] text-white/40">{effects.shadow.offsetY}px</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-0.5 block text-[10px] text-white/40">Blur: {effects.shadow.blur}px</label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={50}
+                    value={effects.shadow.blur}
+                    onChange={(e) =>
+                      setEffects({ shadow: { ...effects.shadow!, blur: Number(e.target.value) } })
+                    }
+                    className="w-full accent-accent"
+                  />
+                </div>
+                <ColorPickerWithAlpha
+                  label="Shadow Color"
+                  color={effects.shadow.color}
+                  onChange={(color) => setEffects({ shadow: { ...effects.shadow!, color } })}
+                />
+              </div>
+            )}
+          </EffectToggle>
+
+          {/* Glow */}
+          <EffectToggle
+            label="Glow"
+            enabled={!!effects.glow}
+            onToggle={(on) =>
+              on
+                ? setEffects({ glow: { blur: 10, color: 'rgba(99,102,241,0.8)' } })
+                : clearEffect('glow')
+            }
+          >
+            {effects.glow && (
+              <div className="mt-1.5 space-y-1.5">
+                <div>
+                  <label className="mb-0.5 block text-[10px] text-white/40">Blur: {effects.glow.blur}px</label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={60}
+                    value={effects.glow.blur}
+                    onChange={(e) =>
+                      setEffects({ glow: { ...effects.glow!, blur: Number(e.target.value) } })
+                    }
+                    className="w-full accent-accent"
+                  />
+                </div>
+                <ColorPickerWithAlpha
+                  label="Glow Color"
+                  color={effects.glow.color}
+                  onChange={(color) => setEffects({ glow: { ...effects.glow!, color } })}
+                />
+              </div>
+            )}
+          </EffectToggle>
+
+          {/* Stroke / Outline */}
+          <EffectToggle
+            label="Outline"
+            enabled={!!effects.stroke}
+            onToggle={(on) =>
+              on
+                ? setEffects({ stroke: { width: 1, color: '#000000' } })
+                : clearEffect('stroke')
+            }
+          >
+            {effects.stroke && (
+              <div className="mt-1.5 space-y-1.5">
+                <div>
+                  <label className="mb-0.5 block text-[10px] text-white/40">Width: {effects.stroke.width}px</label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={10}
+                    step={0.5}
+                    value={effects.stroke.width}
+                    onChange={(e) =>
+                      setEffects({ stroke: { ...effects.stroke!, width: Number(e.target.value) } })
+                    }
+                    className="w-full accent-accent"
+                  />
+                </div>
+                <ColorPickerWithAlpha
+                  label="Stroke Color"
+                  color={effects.stroke.color}
+                  onChange={(color) => setEffects({ stroke: { ...effects.stroke!, color } })}
+                />
+              </div>
+            )}
+          </EffectToggle>
+
+          {/* Gradient Fill */}
+          <EffectToggle
+            label="Gradient Fill"
+            enabled={!!effects.gradientFill}
+            onToggle={(on) =>
+              on
+                ? setEffects({
+                    gradientFill: {
+                      angle: 135,
+                      stops: [
+                        { color: '#6366f1', position: 0 },
+                        { color: '#a855f7', position: 100 },
+                      ],
+                    },
+                  })
+                : clearEffect('gradientFill')
+            }
+          >
+            {effects.gradientFill && (
+              <div className="mt-1.5 space-y-1.5">
+                <div>
+                  <label className="mb-0.5 block text-[10px] text-white/40">
+                    Angle: {effects.gradientFill.angle}&deg;
+                  </label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={360}
+                    value={effects.gradientFill.angle}
+                    onChange={(e) =>
+                      setEffects({
+                        gradientFill: { ...effects.gradientFill!, angle: Number(e.target.value) },
+                      })
+                    }
+                    className="w-full accent-accent"
+                  />
+                </div>
+                <ColorPickerWithAlpha
+                  label="Stop 1"
+                  color={effects.gradientFill.stops[0]?.color ?? '#6366f1'}
+                  onChange={(color) => {
+                    const stops = [...effects.gradientFill!.stops];
+                    stops[0] = { ...stops[0], color };
+                    setEffects({ gradientFill: { ...effects.gradientFill!, stops } });
+                  }}
+                />
+                <ColorPickerWithAlpha
+                  label="Stop 2"
+                  color={effects.gradientFill.stops[1]?.color ?? '#a855f7'}
+                  onChange={(color) => {
+                    const stops = [...effects.gradientFill!.stops];
+                    stops[1] = { ...stops[1], color };
+                    setEffects({ gradientFill: { ...effects.gradientFill!, stops } });
+                  }}
+                />
+              </div>
+            )}
+          </EffectToggle>
+
+          {/* Letter Spacing */}
+          <div>
+            <label className="mb-0.5 block text-[10px] text-white/40">
+              Letter Spacing: {effects.letterSpacing ?? 0}px
+            </label>
+            <input
+              type="range"
+              min={-5}
+              max={20}
+              step={0.5}
+              value={effects.letterSpacing ?? 0}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                if (val === 0) {
+                  clearEffect('letterSpacing');
+                } else {
+                  setEffects({ letterSpacing: val });
+                }
+              }}
+              className="w-full accent-accent"
+            />
+          </div>
+
+          {/* Opacity */}
+          <div>
+            <label className="mb-0.5 block text-[10px] text-white/40">
+              Opacity: {Math.round((effects.opacity ?? 1) * 100)}%
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round((effects.opacity ?? 1) * 100)}
+              onChange={(e) => {
+                const val = Number(e.target.value) / 100;
+                if (val === 1) {
+                  clearEffect('opacity');
+                } else {
+                  setEffects({ opacity: val });
+                }
+              }}
+              className="w-full accent-accent"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EffectToggle({
+  label,
+  enabled,
+  onToggle,
+  children,
+}: {
+  label: string;
+  enabled: boolean;
+  onToggle: (on: boolean) => void;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="flex items-center gap-2 text-[10px] text-white/40">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(e) => onToggle(e.target.checked)}
+          className="accent-accent"
+        />
+        {label}
+      </label>
+      {children}
+    </div>
   );
 }

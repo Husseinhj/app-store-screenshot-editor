@@ -6,6 +6,7 @@ import { ImageElementPanel } from '../sidebar/ImageElementPanel';
 import { ShapePanel } from '../sidebar/ShapePanel';
 import { BackgroundPanel } from '../sidebar/BackgroundPanel';
 import { AlignPanel } from '../sidebar/AlignPanel';
+import { GuidelinesPanel } from '../sidebar/GuidelinesPanel';
 import { ChevronRight } from 'lucide-react';
 import type { DeviceFrameElement, TextElement, ImageElement, ShapeElement } from '@/store/types';
 
@@ -48,6 +49,7 @@ export function RightPanel({ style, onCollapse }: Props) {
             <p className="text-[10px] text-white/30">Click an element on canvas to edit it</p>
           </div>
           <BackgroundPanel />
+          <GuidelinesPanel />
         </>
       )}
 
