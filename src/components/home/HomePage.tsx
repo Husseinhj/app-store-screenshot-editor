@@ -341,45 +341,173 @@ function MiniDevice({
   }
 }
 
+// ─── Showcase Mini Screenshot ─────────────────────────────────────────────────
+
+/** A mini App Store screenshot preview — shows what the actual exported screenshot looks like:
+ *  background + headline text + phone mockup with wireframe content */
+function MiniScreenshotPreview({
+  screenshot,
+  template,
+  accentColor,
+  width,
+  style,
+}: {
+  screenshot: ShowcaseScreenshot;
+  template: DesignTemplate | undefined;
+  accentColor: string;
+  width: number;
+  style?: React.CSSProperties;
+}) {
+  const height = width * (16 / 9); // App Store screenshot aspect ratio
+
+  // Template background
+  const getBg = (): string => {
+    if (!template) return screenshot.screenBg;
+    if (template.background.type === 'solid') return template.background.solidColor;
+    if (template.background.type === 'gradient') {
+      const { angle, stops } = template.background.gradient;
+      return `linear-gradient(${angle}deg, ${stops.map((s) => `${s.color} ${s.position}%`).join(', ')})`;
+    }
+    return '#000';
+  };
+
+  const headlineSpec = template?.elements.find((e) => e.type === 'text');
+  const subtitleSpec = template?.elements.filter((e) => e.type === 'text')[1];
+  const textColor = headlineSpec?.text?.color ?? screenshot.textColor;
+  const subtitleColor = subtitleSpec?.text?.color ?? screenshot.textColor;
+  const fontFamily = headlineSpec?.text?.fontFamily ?? 'Inter';
+  const fontWeight = headlineSpec?.text?.fontWeight ?? 700;
+  const textEffects = headlineSpec?.text?.effects;
+
+  // Check layout style
+  const isEditorial = headlineSpec && headlineSpec.transform.x < 15 && headlineSpec.text?.alignment === 'left';
+  const deviceSpec = template?.elements.find((e) => e.type === 'device-frame');
+  const deviceX = deviceSpec?.transform.x ?? 20;
+
+  return (
+    <div
+      className="relative overflow-hidden flex-shrink-0 rounded-[4px]"
+      style={{ width, height, background: getBg(), boxShadow: '0 2px 8px rgba(0,0,0,0.3)', ...style }}
+    >
+      {/* Text */}
+      <div
+        className="absolute px-[8%]"
+        style={{
+          top: isEditorial ? '8%' : '4%',
+          left: isEditorial ? '4%' : 0,
+          right: isEditorial ? '50%' : 0,
+          textAlign: isEditorial ? 'left' : 'center',
+        }}
+      >
+        <div
+          className="leading-tight"
+          style={{
+            color: textColor,
+            fontFamily,
+            fontWeight,
+            fontSize: Math.max(5, width * 0.065),
+            lineHeight: 1.15,
+            ...getTextEffectStyles(textEffects),
+          }}
+        >
+          {screenshot.headline}
+        </div>
+        <div
+          className="mt-[2px] leading-tight"
+          style={{
+            color: subtitleColor,
+            fontFamily: subtitleSpec?.text?.fontFamily ?? 'Inter',
+            fontWeight: subtitleSpec?.text?.fontWeight ?? 400,
+            fontSize: Math.max(3, width * 0.035),
+            opacity: 0.6,
+          }}
+        >
+          {screenshot.subtitle}
+        </div>
+      </div>
+
+      {/* Phone mockup */}
+      <div
+        className="absolute overflow-hidden"
+        style={{
+          left: isEditorial ? '50%' : `${Math.max(deviceX, 15)}%`,
+          top: `${deviceSpec?.transform.y ?? 24}%`,
+          width: `${Math.min(deviceSpec?.transform.width ?? 60, 65)}%`,
+          bottom: 0,
+          transform: deviceSpec?.transform.rotation ? `rotate(${deviceSpec.transform.rotation}deg)` : undefined,
+        }}
+      >
+        <div
+          className="relative w-full"
+          style={{
+            aspectRatio: '9 / 19.5',
+            borderRadius: '14% / 6.5%',
+            backgroundColor: '#1c1c1e',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+          }}
+        >
+          {/* Screen */}
+          <div
+            className="absolute overflow-hidden"
+            style={{
+              top: '2.5%',
+              left: '5%',
+              right: '5%',
+              bottom: '2.5%',
+              borderRadius: '12% / 5.5%',
+              background: screenshot.screenBg,
+            }}
+          >
+            <ScreenContent
+              headline=""
+              subtitle=""
+              textColor={screenshot.textColor}
+              headlineFontSize={Math.max(3, width * 0.04)}
+              subtitleFontSize={Math.max(2, width * 0.025)}
+            />
+          </div>
+          {/* Dynamic Island */}
+          <div
+            className="absolute bg-black"
+            style={{ top: '3.5%', left: '50%', transform: 'translateX(-50%)', width: '28%', height: '2.8%', borderRadius: 99 }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Showcase Card ─────────────────────────────────────────────────────────────
 
 function ShowcaseCard({ app, onUse }: { app: ShowcaseApp; onUse: () => void }) {
-  // Show platform badges
   const deviceTypes = [...new Set(app.screenshots.map((s) => s.device))];
   const deviceLabels: Record<ShowcaseDevice, string> = { iphone: 'iPhone', ipad: 'iPad', mac: 'Mac', watch: 'Watch' };
 
-  // Pick a representative sample of screenshots for the card preview (1 per device type, max ~6)
-  const previewScreenshots: ShowcaseScreenshot[] = [];
-  const deviceOrder: ShowcaseDevice[] = ['iphone', 'ipad', 'mac', 'watch'];
-  for (const device of deviceOrder) {
-    const forDevice = app.screenshots.filter((s) => s.device === device);
-    // Take up to 2 iPhones, 1 each of others
-    const take = device === 'iphone' ? 2 : 1;
-    previewScreenshots.push(...forDevice.slice(0, take));
-  }
+  // Find the template used by this showcase
+  const template = designTemplates.find((t) => t.id === app.templateId);
+
+  // Pick first 4 iPhone screenshots to show as mini App Store screenshot previews
+  const iphoneShots = app.screenshots.filter((s) => s.device === 'iphone').slice(0, 4);
 
   return (
     <div className="group relative flex-shrink-0 w-[480px] snap-start rounded-2xl overflow-hidden bg-surface-800 ring-1 ring-white/8 hover:ring-white/20 transition-all">
-      {/* Device screens area */}
-      <div
-        className="relative h-[280px] flex items-end justify-center px-4 pt-4 pb-3 overflow-hidden"
-        style={{ background: app.cardGradient }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+      {/* Screenshot previews area — shows what actual App Store screenshots look like */}
+      <div className="relative h-[280px] flex items-end justify-center px-5 pt-5 pb-4 overflow-hidden bg-surface-900/50">
+        {/* Subtle gradient behind */}
+        <div className="absolute inset-0 opacity-30" style={{ background: app.cardGradient }} />
 
-        {/* Devices — aligned at bottom */}
-        <div className="relative z-10 flex items-end justify-center gap-2">
-          {previewScreenshots.map((screenshot, i) => {
-            // Stagger heights: center items sit a bit higher
-            const mid = (previewScreenshots.length - 1) / 2;
-            const dist = Math.abs(i - mid);
-            const yOff = dist * 10;
+        {/* Mini screenshots — like App Store listing */}
+        <div className="relative z-10 flex items-end gap-2.5">
+          {iphoneShots.map((screenshot, i) => {
+            const yOff = i === 1 || i === 2 ? -6 : 0;
             return (
-              <MiniDevice
+              <MiniScreenshotPreview
                 key={i}
                 screenshot={screenshot}
-                baseWidth={68}
-                style={{ transform: `translateY(${yOff}px)`, transition: 'transform 0.3s ease' }}
+                template={template}
+                accentColor={app.accentColor}
+                width={100}
+                style={{ transform: `translateY(${yOff}px)` }}
               />
             );
           })}
@@ -549,12 +677,13 @@ function TemplateGalleryCard({
   const textColor = headlineSpec?.text?.color ?? '#ffffff';
   const textEffects = headlineSpec?.text?.effects;
   const deviceSpec = template.elements.find((e) => e.type === 'device-frame');
-  const shapes = template.elements.filter((e) => e.type === 'shape');
+  // Only show small circle decorations — skip rectangles (they look cluttered at preview size)
+  const circles = template.elements.filter((e) => e.type === 'shape' && e.shape?.shapeType === 'circle');
   const preview = templatePreviewData[template.id] ?? { headline: template.name, subtitle: 'Beautiful design', screenAccent: '#6366f1' };
 
   // Determine if the text is positioned left (editorial-style)
   const isEditorialLayout = headlineSpec && headlineSpec.transform.x < 15 && headlineSpec.text?.alignment === 'left';
-  // Determine phone position from template: centered, left-biased, or right-biased
+  // Determine phone position from template
   const deviceX = deviceSpec?.transform.x ?? 20;
   const deviceRotation = deviceSpec?.transform.rotation ?? 0;
 
@@ -568,29 +697,21 @@ function TemplateGalleryCard({
       {/* Background */}
       <div className="absolute inset-0" style={{ background: getBgCss() }} />
 
-      {/* Decorative shapes */}
-      {shapes.map((shape, i) => {
-        const fill = shape.shape?.fillColor ?? 'rgba(255,255,255,0.1)';
-        const borderRadius = shape.shape?.shapeType === 'circle' ? '50%'
-          : shape.shape?.borderRadius ? `${Math.min(shape.shape.borderRadius, 20)}px` : '4px';
-        return (
-          <div
-            key={i}
-            className="absolute"
-            style={{
-              left: `${shape.transform.x}%`,
-              top: `${shape.transform.y}%`,
-              width: `${shape.transform.width}%`,
-              height: `${shape.transform.height}%`,
-              backgroundColor: fill,
-              borderRadius,
-              border: shape.shape?.strokeWidth ? `1px solid ${shape.shape.strokeColor}` : undefined,
-              opacity: 0.7,
-              transform: shape.transform.rotation ? `rotate(${shape.transform.rotation}deg)` : undefined,
-            }}
-          />
-        );
-      })}
+      {/* Only small circle decorations — no rectangles */}
+      {circles.map((shape, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            left: `${shape.transform.x}%`,
+            top: `${shape.transform.y}%`,
+            width: `${shape.transform.width}%`,
+            height: `${shape.transform.height}%`,
+            backgroundColor: shape.shape?.fillColor ?? 'rgba(255,255,255,0.1)',
+            opacity: 0.6,
+          }}
+        />
+      ))}
 
       {/* Content */}
       <div className="relative flex h-full w-full flex-col p-3">
@@ -634,7 +755,7 @@ function TemplateGalleryCard({
           )}
         </div>
 
-        {/* Realistic phone mockup — width-driven, aspect ratio preserved */}
+        {/* Phone mockup — width-driven, aspect ratio preserved */}
         {deviceSpec && (
           <div
             className="absolute overflow-hidden"
@@ -646,7 +767,6 @@ function TemplateGalleryCard({
               transform: deviceRotation ? `rotate(${deviceRotation}deg)` : undefined,
             }}
           >
-            {/* Phone frame — width fills container, height from aspect ratio, overflows and clips */}
             <div
               className="relative w-full"
               style={{
@@ -673,27 +793,12 @@ function TemplateGalleryCard({
               {/* Dynamic Island */}
               <div
                 className="absolute bg-black"
-                style={{
-                  top: '3.5%',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '28%',
-                  height: '2.8%',
-                  borderRadius: 99,
-                }}
+                style={{ top: '3.5%', left: '50%', transform: 'translateX(-50%)', width: '28%', height: '2.8%', borderRadius: 99 }}
               />
               {/* Home indicator */}
               <div
                 className="absolute"
-                style={{
-                  bottom: '2%',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '30%',
-                  height: '0.8%',
-                  borderRadius: 99,
-                  backgroundColor: 'rgba(255,255,255,0.15)',
-                }}
+                style={{ bottom: '2%', left: '50%', transform: 'translateX(-50%)', width: '30%', height: '0.8%', borderRadius: 99, backgroundColor: 'rgba(255,255,255,0.15)' }}
               />
             </div>
           </div>
