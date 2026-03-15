@@ -1,10 +1,13 @@
 import { useRef, useState } from 'react';
 import { useProjectStore } from '@/store/useProjectStore';
-import { devices, devicesByPlatform } from '@/lib/devices';
+import { devices, devicesByPlatform, platformLabels } from '@/lib/devices';
 import { SidebarSection } from './SidebarSection';
-import type { DeviceType, DeviceFrameElement, CustomFrame } from '@/store/types';
-import { Monitor, Smartphone, Code2, RectangleVertical, RectangleHorizontal, Upload, Trash2, Edit3 } from 'lucide-react';
+import type { DeviceType, DeviceFrameElement, CustomFrame, Platform } from '@/store/types';
+import { Monitor, Smartphone, Code2, RectangleVertical, RectangleHorizontal, Upload, Trash2, Edit3, Maximize, Minimize, Square, Move, ChevronRight, ChevronDown } from 'lucide-react';
+import type { ScreenshotFit } from '@/store/types';
 import { nanoid } from 'nanoid';
+
+const allPlatforms: Platform[] = ['iphone', 'ipad', 'mac', 'apple-watch'];
 
 interface Props {
   element: DeviceFrameElement;
@@ -21,10 +24,19 @@ export function DevicePanel({ element }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editingFrame, setEditingFrame] = useState<string | null>(null);
   const [screenRect, setScreenRect] = useState({ x: 0, y: 0, width: 100, height: 100 });
+  const [expandedPlatforms, setExpandedPlatforms] = useState<Platform[]>([platform]);
 
-  const availableDevices = devicesByPlatform[platform];
   const currentDevice = devices[element.device];
   const colorVariants = currentDevice.colorVariants;
+
+  // Show current platform first, then others
+  const sortedPlatforms = [platform, ...allPlatforms.filter((p) => p !== platform)];
+
+  const togglePlatformGroup = (p: Platform) => {
+    setExpandedPlatforms((prev) =>
+      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
+    );
+  };
 
   const handleImportSvg = () => {
     fileInputRef.current?.click();
@@ -79,25 +91,45 @@ export function DevicePanel({ element }: Props) {
 
   return (
     <SidebarSection title="Device">
-      {/* Device selector */}
+      {/* Device selector — all platforms, grouped */}
       <div className="space-y-1 mb-3">
-        {availableDevices.map((deviceId: DeviceType) => {
-          const def = devices[deviceId];
+        {sortedPlatforms.map((p) => {
+          const platformDevices = devicesByPlatform[p];
+          const isExpanded = expandedPlatforms.includes(p);
           return (
-            <button
-              key={deviceId}
-              onClick={() => updateDeviceElement(element.id, { device: deviceId, customFrameId: null })}
-              className={`w-full rounded-lg px-3 py-2 text-left text-xs transition-colors ${
-                element.device === deviceId && !element.customFrameId
-                  ? 'bg-accent/20 text-white ring-1 ring-accent/50'
-                  : 'text-white/60 hover:bg-surface-600 hover:text-white'
-              }`}
-            >
-              {def.label}
-              <span className="ml-2 text-[10px] text-white/30">
-                {def.nativeScreenWidth}x{def.nativeScreenHeight}
-              </span>
-            </button>
+            <div key={p}>
+              <button
+                onClick={() => togglePlatformGroup(p)}
+                className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/40 hover:text-white/60 hover:bg-surface-700 transition-colors"
+              >
+                {isExpanded ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+                {platformLabels[p]}
+                <span className="text-[9px] font-normal text-white/20 ml-auto">{platformDevices.length}</span>
+              </button>
+              {isExpanded && (
+                <div className="space-y-0.5 mt-0.5 ml-2">
+                  {platformDevices.map((deviceId: DeviceType) => {
+                    const def = devices[deviceId];
+                    return (
+                      <button
+                        key={deviceId}
+                        onClick={() => updateDeviceElement(element.id, { device: deviceId, customFrameId: null })}
+                        className={`w-full rounded-lg px-3 py-1.5 text-left text-xs transition-colors ${
+                          element.device === deviceId && !element.customFrameId
+                            ? 'bg-accent/20 text-white ring-1 ring-accent/50'
+                            : 'text-white/60 hover:bg-surface-600 hover:text-white'
+                        }`}
+                      >
+                        {def.label}
+                        <span className="ml-2 text-[10px] text-white/30">
+                          {def.nativeScreenWidth}x{def.nativeScreenHeight}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
@@ -194,8 +226,8 @@ export function DevicePanel({ element }: Props) {
         />
       </div>
 
-      {/* Orientation toggle — iPad only */}
-      {platform === 'ipad' && (
+      {/* Orientation toggle — iPad devices only */}
+      {currentDevice.platform === 'ipad' && (
         <div className="mb-3">
           <label className="mb-1.5 block text-[10px] text-white/40">Orientation</label>
           <div className="grid grid-cols-2 gap-1 rounded-lg bg-surface-700 p-1">
@@ -309,6 +341,90 @@ export function DevicePanel({ element }: Props) {
           </div>
         );
       })()}
+
+      {/* Screenshot Fit Mode */}
+      {element.screenshotImageUrl && (
+        <div className="mt-3">
+          <label className="mb-1.5 block text-[10px] text-white/40">Screenshot Fit</label>
+          <div className="grid grid-cols-4 gap-1 rounded-lg bg-surface-700 p-1">
+            {([
+              { value: 'contain' as ScreenshotFit, label: 'Fit', icon: Minimize },
+              { value: 'cover' as ScreenshotFit, label: 'Fill', icon: Maximize },
+              { value: 'stretch' as ScreenshotFit, label: 'Stretch', icon: Square },
+              { value: 'fill' as ScreenshotFit, label: 'Center', icon: Move },
+            ]).map(({ value, label, icon: Icon }) => (
+              <button
+                key={value}
+                onClick={() => updateDeviceElement(element.id, { screenshotFit: value })}
+                className={`flex flex-col items-center gap-0.5 rounded-md py-1.5 text-[9px] font-medium transition-colors ${
+                  (element.screenshotFit ?? 'contain') === value
+                    ? 'bg-accent text-white'
+                    : 'text-white/50 hover:text-white/80'
+                }`}
+              >
+                <Icon size={11} />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Screenshot Position & Scale */}
+      {element.screenshotImageUrl && (
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-[10px] text-white/40">Screenshot Position</label>
+            <button
+              onClick={() => updateDeviceElement(element.id, {
+                screenshotOffset: { x: 0, y: 0 },
+                screenshotScale: 1,
+              })}
+              className="text-[9px] text-white/30 hover:text-white/60"
+            >
+              Reset
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <div>
+              <label className="text-[9px] text-white/30">Offset X</label>
+              <input
+                type="number"
+                step={1}
+                value={element.screenshotOffset?.x ?? 0}
+                onChange={(e) => updateDeviceElement(element.id, {
+                  screenshotOffset: { ...(element.screenshotOffset ?? { x: 0, y: 0 }), x: Number(e.target.value) }
+                })}
+                className="w-full rounded-md bg-surface-700 px-2 py-1 text-[10px] text-white outline-none ring-1 ring-white/10"
+              />
+            </div>
+            <div>
+              <label className="text-[9px] text-white/30">Offset Y</label>
+              <input
+                type="number"
+                step={1}
+                value={element.screenshotOffset?.y ?? 0}
+                onChange={(e) => updateDeviceElement(element.id, {
+                  screenshotOffset: { ...(element.screenshotOffset ?? { x: 0, y: 0 }), y: Number(e.target.value) }
+                })}
+                className="w-full rounded-md bg-surface-700 px-2 py-1 text-[10px] text-white outline-none ring-1 ring-white/10"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-[9px] text-white/30">Scale ({Math.round((element.screenshotScale ?? 1) * 100)}%)</label>
+            <input
+              type="range"
+              min={0.1}
+              max={3}
+              step={0.05}
+              value={element.screenshotScale ?? 1}
+              onChange={(e) => updateDeviceElement(element.id, { screenshotScale: Number(e.target.value) })}
+              className="w-full accent-accent"
+            />
+          </div>
+        </div>
+      )}
     </SidebarSection>
   );
 }

@@ -55,6 +55,9 @@ export function CanvasElementRenderer({ element, canvasWidth, canvasHeight }: Pr
           showFrame={element.showDeviceFrame}
           orientation={element.orientation}
           customFrame={element.customFrameId ? customFrames.find((f) => f.id === element.customFrameId) ?? null : null}
+          screenshotFit={element.screenshotFit}
+          screenshotOffset={element.screenshotOffset}
+          screenshotScale={element.screenshotScale}
         />
       )}
       {element.type === 'text' && element.id !== editingTextElementId && (

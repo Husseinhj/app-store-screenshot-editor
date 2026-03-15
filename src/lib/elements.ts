@@ -94,6 +94,9 @@ export function createDefaultDeviceFrameElement(
     showDeviceFrame: true,
     orientation: 'portrait' as Orientation,
     screenshotImageUrl: null,
+    screenshotFit: 'contain',
+    screenshotOffset: { x: 0, y: 0 },
+    screenshotScale: 1,
   };
 }
 

@@ -255,7 +255,7 @@ export function ColorPickerWithAlpha({ color, onChange, label }: Props) {
           onChange={(e) => setTextValue(e.target.value)}
           onBlur={handleTextCommit}
           onKeyDown={(e) => e.key === 'Enter' && handleTextCommit()}
-          className="w-24 rounded-lg bg-surface-700 px-2 py-1.5 text-[10px] text-white outline-none ring-1 ring-white/10 focus:ring-accent/50 font-mono"
+          className="w-32 rounded-lg bg-surface-700 px-2 py-1.5 text-[11px] text-white outline-none ring-1 ring-white/10 focus:ring-accent/50 font-mono"
         />
         <select
           value={format}

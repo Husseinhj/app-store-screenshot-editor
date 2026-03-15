@@ -87,6 +87,8 @@ export interface CustomFrame {
   viewBox: string;
 }
 
+export type ScreenshotFit = 'contain' | 'cover' | 'fill' | 'stretch';
+
 export interface DeviceFrameElement extends BaseElement {
   type: 'device-frame';
   device: DeviceType;
@@ -96,6 +98,9 @@ export interface DeviceFrameElement extends BaseElement {
   orientation: Orientation;
   screenshotImageUrl: string | null;
   customFrameId?: string | null;
+  screenshotFit: ScreenshotFit;
+  screenshotOffset: { x: number; y: number };
+  screenshotScale: number;
 }
 
 export interface TextElement extends BaseElement {

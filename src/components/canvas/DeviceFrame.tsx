@@ -1,5 +1,5 @@
 import { devices, getFrameColors, getSvgPathForVariant, getOrientedFrameDimensions, type DeviceDefinition, type FrameColorVariant } from '@/lib/devices';
-import type { DeviceType, FrameStyle, Orientation, CustomFrame } from '@/store/types';
+import type { DeviceType, FrameStyle, Orientation, CustomFrame, ScreenshotFit } from '@/store/types';
 import { ImagePlus } from 'lucide-react';
 
 interface Props {
@@ -11,6 +11,39 @@ interface Props {
   showFrame?: boolean;
   orientation?: Orientation;
   customFrame?: CustomFrame | null;
+  screenshotFit?: ScreenshotFit;
+  screenshotOffset?: { x: number; y: number };
+  screenshotScale?: number;
+}
+
+/** Map ScreenshotFit to CSS objectFit value */
+function getObjectFit(fit: ScreenshotFit): React.CSSProperties['objectFit'] {
+  switch (fit) {
+    case 'contain': return 'contain';
+    case 'cover': return 'cover';
+    case 'fill': return 'cover';
+    case 'stretch': return 'fill';
+    default: return 'contain';
+  }
+}
+
+function getScreenshotImgStyle(
+  fit: ScreenshotFit,
+  offset: { x: number; y: number },
+  scale: number,
+): React.CSSProperties {
+  const objectFit = getObjectFit(fit);
+  const hasTransform = offset.x !== 0 || offset.y !== 0 || scale !== 1;
+  return {
+    width: '100%',
+    height: '100%',
+    objectFit,
+    objectPosition: 'center',
+    ...(hasTransform && {
+      transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+      transformOrigin: 'center center',
+    }),
+  };
 }
 
 export function DeviceFrame({
@@ -22,36 +55,40 @@ export function DeviceFrame({
   showFrame = true,
   orientation = 'portrait',
   customFrame,
+  screenshotFit = 'contain',
+  screenshotOffset = { x: 0, y: 0 },
+  screenshotScale = 1,
 }: Props) {
   const def = devices[device];
   const colors = getFrameColors(def, frameColorVariant);
+  const imgStyle = getScreenshotImgStyle(screenshotFit, screenshotOffset, screenshotScale);
 
   // Custom frame rendering
   if (customFrame && showFrame) {
-    return <CustomFrameView customFrame={customFrame} screenshotUrl={screenshotUrl} maxHeight={maxHeight} />;
+    return <CustomFrameView customFrame={customFrame} screenshotUrl={screenshotUrl} maxHeight={maxHeight} imgStyle={imgStyle} />;
   }
 
   if (!showFrame) {
-    return <FramelessView def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} orientation={orientation} />;
+    return <FramelessView def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} orientation={orientation} imgStyle={imgStyle} />;
   }
 
   // SVG mockup mode — use real device SVG images
   const svgPath = getSvgPathForVariant(def, frameColorVariant);
   if (frameStyle === 'svg' && svgPath && def.svgScreenRect) {
-    return <SvgFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} svgPathOverride={svgPath} orientation={orientation} />;
+    return <SvgFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} svgPathOverride={svgPath} orientation={orientation} imgStyle={imgStyle} screenshotFit={screenshotFit} screenshotOffset={screenshotOffset} screenshotScale={screenshotScale} />;
   }
 
   // CSS mode fallback
   if (def.platform === 'mac') {
-    return <MacFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} colors={colors} />;
+    return <MacFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} colors={colors} imgStyle={imgStyle} />;
   }
   if (def.platform === 'apple-watch') {
-    return <WatchFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} colors={colors} />;
+    return <WatchFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} colors={colors} imgStyle={imgStyle} />;
   }
   if (def.platform === 'ipad') {
-    return <TabletFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} colors={colors} orientation={orientation} />;
+    return <TabletFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} colors={colors} orientation={orientation} imgStyle={imgStyle} />;
   }
-  return <PhoneFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} colors={colors} />;
+  return <PhoneFrame def={def} screenshotUrl={screenshotUrl} maxHeight={maxHeight} colors={colors} imgStyle={imgStyle} />;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -63,12 +100,20 @@ function SvgFrame({
   maxHeight,
   svgPathOverride,
   orientation = 'portrait',
+  imgStyle,
+  screenshotFit = 'contain',
+  screenshotOffset = { x: 0, y: 0 },
+  screenshotScale = 1,
 }: {
   def: DeviceDefinition;
   screenshotUrl: string | null;
   maxHeight: number;
   svgPathOverride?: string;
   orientation?: Orientation;
+  imgStyle: React.CSSProperties;
+  screenshotFit?: ScreenshotFit;
+  screenshotOffset?: { x: number; y: number };
+  screenshotScale?: number;
 }) {
   const frameSvgPath = svgPathOverride ?? def.svgPath!;
   const vb = def.svgViewBox;
@@ -136,8 +181,8 @@ function SvgFrame({
                   height: screenW,
                   left: '50%',
                   top: '50%',
-                  transform: 'translate(-50%, -50%) rotate(-90deg)',
-                  objectFit: 'contain',
+                  transform: `translate(-50%, -50%) rotate(-90deg) translate(${screenshotOffset.x}px, ${screenshotOffset.y}px) scale(${screenshotScale})`,
+                  objectFit: getObjectFit(screenshotFit),
                 }}
               />
             ) : (
@@ -176,8 +221,8 @@ function SvgFrame({
               <img
                 src={screenshotUrl}
                 alt="Screenshot"
-                className="h-full w-full object-contain"
                 draggable={false}
+                style={imgStyle}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-black">
@@ -206,9 +251,9 @@ function SvgFrame({
    ══════════════════════════════════════════════════════════════════════════════ */
 
 function PhoneFrame({
-  def, screenshotUrl, maxHeight, colors,
+  def, screenshotUrl, maxHeight, colors, imgStyle,
 }: {
-  def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; colors: FrameColorVariant;
+  def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; colors: FrameColorVariant; imgStyle: React.CSSProperties;
 }) {
   const aspectRatio = def.frameWidth / def.frameHeight;
   const frameHeight = maxHeight;
@@ -240,7 +285,7 @@ function PhoneFrame({
       <div style={{ position: 'absolute', left: -2.5, top: '28.5%', width: 3, height: frameHeight * 0.05, borderRadius: '2px 0 0 2px', backgroundColor: colors.buttonColor }} />
       <div className="absolute overflow-hidden" style={{ top: bezelT, left: bezelL, right: bezelR, bottom: bezelB, borderRadius: screenR, backgroundColor: '#000' }}>
         {screenshotUrl ? (
-          <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-contain" draggable={false} />
+          <img src={screenshotUrl} alt="Screenshot" draggable={false} style={imgStyle} />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <div className="text-center text-white/20">
@@ -259,9 +304,9 @@ function PhoneFrame({
 }
 
 function TabletFrame({
-  def, screenshotUrl, maxHeight, colors, orientation = 'portrait',
+  def, screenshotUrl, maxHeight, colors, orientation = 'portrait', imgStyle,
 }: {
-  def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; colors: FrameColorVariant; orientation?: Orientation;
+  def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; colors: FrameColorVariant; orientation?: Orientation; imgStyle: React.CSSProperties;
 }) {
   const oriented = getOrientedFrameDimensions(def, orientation ?? 'portrait');
   const aspectRatio = oriented.frameWidth / oriented.frameHeight;
@@ -288,7 +333,7 @@ function TabletFrame({
       )}
       <div className="absolute overflow-hidden" style={{ top: bezelT, left: bezelL, right: bezelR, bottom: bezelB, borderRadius: screenR, backgroundColor: '#000' }}>
         {screenshotUrl ? (
-          <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-contain" draggable={false} />
+          <img src={screenshotUrl} alt="Screenshot" draggable={false} style={imgStyle} />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <div className="text-center text-white/20">
@@ -302,7 +347,7 @@ function TabletFrame({
   );
 }
 
-function FramelessView({ def, screenshotUrl, maxHeight, orientation = 'portrait' }: { def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; orientation?: Orientation }) {
+function FramelessView({ def, screenshotUrl, maxHeight, orientation = 'portrait', imgStyle }: { def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; orientation?: Orientation; imgStyle: React.CSSProperties }) {
   // For portrait iPad, swap screen dimensions so the aspect ratio is portrait
   const isPortraitIpad = def.platform === 'ipad' && orientation === 'portrait';
   const screenW = isPortraitIpad ? Math.min(def.nativeScreenWidth, def.nativeScreenHeight) : def.nativeScreenWidth;
@@ -316,7 +361,7 @@ function FramelessView({ def, screenshotUrl, maxHeight, orientation = 'portrait'
   return (
     <div className="relative overflow-hidden" style={{ width: imgWidth, height: imgHeight, borderRadius, boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)', backgroundColor: '#000' }}>
       {screenshotUrl ? (
-        <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-contain" draggable={false} />
+        <img src={screenshotUrl} alt="Screenshot" draggable={false} style={imgStyle} />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-black/80">
           <div className="text-center text-white/30">
@@ -329,7 +374,7 @@ function FramelessView({ def, screenshotUrl, maxHeight, orientation = 'portrait'
   );
 }
 
-function MacFrame({ def, screenshotUrl, maxHeight, colors }: { def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; colors: FrameColorVariant }) {
+function MacFrame({ def, screenshotUrl, maxHeight, colors, imgStyle }: { def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; colors: FrameColorVariant; imgStyle: React.CSSProperties }) {
   const aspectRatio = def.frameWidth / def.frameHeight;
   const frameHeight = maxHeight;
   const frameWidth = frameHeight * aspectRatio;
@@ -340,7 +385,7 @@ function MacFrame({ def, screenshotUrl, maxHeight, colors }: { def: DeviceDefini
         <div className="absolute left-1/2 -translate-x-1/2 rounded-full bg-[#111]" style={{ top: frameHeight * 0.01, width: 8, height: 8, border: '1px solid #444' }} />
         <div className="absolute overflow-hidden" style={{ top: `${def.screenInset.top * 0.9}%`, left: '3%', right: '3%', bottom: '3%', borderRadius: def.screenBorderRadius, backgroundColor: '#000' }}>
           {screenshotUrl ? (
-            <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-contain" draggable={false} />
+            <img src={screenshotUrl} alt="Screenshot" draggable={false} style={imgStyle} />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-black/80">
               <div className="text-center text-white/30"><ImagePlus size={24} className="mx-auto mb-2" /><p className="text-xs">Drop screenshot</p></div>
@@ -355,7 +400,7 @@ function MacFrame({ def, screenshotUrl, maxHeight, colors }: { def: DeviceDefini
   );
 }
 
-function WatchFrame({ def, screenshotUrl, maxHeight, colors }: { def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; colors: FrameColorVariant }) {
+function WatchFrame({ def, screenshotUrl, maxHeight, colors, imgStyle }: { def: DeviceDefinition; screenshotUrl: string | null; maxHeight: number; colors: FrameColorVariant; imgStyle: React.CSSProperties }) {
   // Watch case is roughly square (not including band). Use ~0.82 aspect ratio for the case body.
   const caseAspect = 0.82;
   const frameHeight = maxHeight * 0.55;
@@ -386,7 +431,7 @@ function WatchFrame({ def, screenshotUrl, maxHeight, colors }: { def: DeviceDefi
         backgroundColor: '#000',
       }}>
         {screenshotUrl ? (
-          <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-contain" draggable={false} />
+          <img src={screenshotUrl} alt="Screenshot" draggable={false} style={imgStyle} />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-black/80">
             <div className="text-center text-white/30"><ImagePlus size={16} className="mx-auto mb-1" /><p style={{ fontSize: 8 }}>Drop</p></div>
@@ -405,10 +450,12 @@ function CustomFrameView({
   customFrame,
   screenshotUrl,
   maxHeight,
+  imgStyle,
 }: {
   customFrame: CustomFrame;
   screenshotUrl: string | null;
   maxHeight: number;
+  imgStyle: React.CSSProperties;
 }) {
   // Parse viewBox to get aspect ratio
   const vbParts = customFrame.viewBox.split(/\s+/).map(Number);
@@ -434,7 +481,7 @@ function CustomFrameView({
         style={{ left: screenX, top: screenY, width: screenW, height: screenH, backgroundColor: '#000' }}
       >
         {screenshotUrl ? (
-          <img src={screenshotUrl} alt="Screenshot" className="h-full w-full object-contain" draggable={false} />
+          <img src={screenshotUrl} alt="Screenshot" draggable={false} style={imgStyle} />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-black/80">
             <div className="text-center text-white/30">

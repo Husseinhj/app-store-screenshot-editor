@@ -13,23 +13,23 @@ interface Props {
 }
 
 const handles: { handle: ResizeHandle; cursor: string; style: React.CSSProperties }[] = [
-  { handle: 'nw', cursor: 'nw-resize', style: { top: -4, left: -4 } },
-  { handle: 'n', cursor: 'n-resize', style: { top: -4, left: '50%', transform: 'translateX(-50%)' } },
-  { handle: 'ne', cursor: 'ne-resize', style: { top: -4, right: -4 } },
-  { handle: 'e', cursor: 'e-resize', style: { top: '50%', right: -4, transform: 'translateY(-50%)' } },
-  { handle: 'se', cursor: 'se-resize', style: { bottom: -4, right: -4 } },
-  { handle: 's', cursor: 's-resize', style: { bottom: -4, left: '50%', transform: 'translateX(-50%)' } },
-  { handle: 'sw', cursor: 'sw-resize', style: { bottom: -4, left: -4 } },
-  { handle: 'w', cursor: 'w-resize', style: { top: '50%', left: -4, transform: 'translateY(-50%)' } },
+  { handle: 'nw', cursor: 'nw-resize', style: { top: -5, left: -5 } },
+  { handle: 'n', cursor: 'n-resize', style: { top: -5, left: '50%', transform: 'translateX(-50%)' } },
+  { handle: 'ne', cursor: 'ne-resize', style: { top: -5, right: -5 } },
+  { handle: 'e', cursor: 'e-resize', style: { top: '50%', right: -5, transform: 'translateY(-50%)' } },
+  { handle: 'se', cursor: 'se-resize', style: { bottom: -5, right: -5 } },
+  { handle: 's', cursor: 's-resize', style: { bottom: -5, left: '50%', transform: 'translateX(-50%)' } },
+  { handle: 'sw', cursor: 'sw-resize', style: { bottom: -5, left: -5 } },
+  { handle: 'w', cursor: 'w-resize', style: { top: '50%', left: -5, transform: 'translateY(-50%)' } },
 ];
 
 export function SelectionBox({ x, y, width, height, scale, rotation, onResizeStart, onRotateStart, multiSelect }: Props) {
-  const borderWidth = Math.max(1, 2 / scale);
-  const handleSize = Math.max(6, 8 / scale);
-  const rotateHandleDistance = Math.max(20, 28 / scale);
-  const rotateHandleSize = Math.max(8, 10 / scale);
+  const borderWidth = Math.max(1, 1.5 / scale);
+  const handleSize = Math.max(8, 10 / scale);
+  const rotateHandleDistance = Math.max(24, 32 / scale);
+  const rotateHandleSize = Math.max(10, 12 / scale);
 
-  const borderColor = multiSelect ? '#22c55e' : '#3b82f6';
+  const accentColor = multiSelect ? '#22c55e' : '#3b82f6';
 
   return (
     <div
@@ -45,12 +45,21 @@ export function SelectionBox({ x, y, width, height, scale, rotation, onResizeSta
         transformOrigin: 'center center',
       }}
     >
-      {/* Selection border */}
+      {/* Selection border — double layer for visibility on any background */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: -borderWidth * 2,
+          border: `${borderWidth}px solid rgba(0, 0, 0, 0.25)`,
+          borderRadius: 3,
+          pointerEvents: 'none',
+        }}
+      />
       <div
         style={{
           position: 'absolute',
           inset: -borderWidth,
-          border: `${borderWidth}px solid ${borderColor}`,
+          border: `${borderWidth}px dashed ${accentColor}`,
           borderRadius: 2,
           pointerEvents: 'none',
         }}
@@ -70,27 +79,31 @@ export function SelectionBox({ x, y, width, height, scale, rotation, onResizeSta
             pointerEvents: 'none',
           }}
         >
-          {/* Rotation circle */}
-          <div
-            onMouseDown={onRotateStart}
-            style={{
-              width: rotateHandleSize,
-              height: rotateHandleSize,
-              backgroundColor: '#ffffff',
-              border: `${Math.max(1, 1.5 / scale)}px solid ${borderColor}`,
-              borderRadius: '50%',
-              cursor: 'grab',
-              pointerEvents: 'auto',
-              zIndex: 10001,
-            }}
-          />
           {/* Connecting line */}
           <div
             style={{
               width: Math.max(1, 1.5 / scale),
               height: rotateHandleDistance - rotateHandleSize / 2,
-              backgroundColor: borderColor,
+              backgroundColor: accentColor,
               pointerEvents: 'none',
+              opacity: 0.6,
+            }}
+          />
+          {/* Rotation circle */}
+          <div
+            onMouseDown={onRotateStart}
+            style={{
+              position: 'absolute',
+              top: 0,
+              width: rotateHandleSize,
+              height: rotateHandleSize,
+              backgroundColor: '#ffffff',
+              border: `${Math.max(1, 1.5 / scale)}px solid ${accentColor}`,
+              borderRadius: '50%',
+              cursor: 'grab',
+              pointerEvents: 'auto',
+              zIndex: 10001,
+              boxShadow: '0 1px 4px rgba(0, 0, 0, 0.35)',
             }}
           />
         </div>
@@ -107,11 +120,12 @@ export function SelectionBox({ x, y, width, height, scale, rotation, onResizeSta
               width: handleSize,
               height: handleSize,
               backgroundColor: '#ffffff',
-              border: `${Math.max(1, 1.5 / scale)}px solid ${borderColor}`,
-              borderRadius: 2,
+              border: `${Math.max(1, 1.5 / scale)}px solid ${accentColor}`,
+              borderRadius: '50%',
               cursor,
               pointerEvents: 'auto',
               zIndex: 10000,
+              boxShadow: '0 1px 4px rgba(0, 0, 0, 0.35)',
               ...style,
             }}
           />

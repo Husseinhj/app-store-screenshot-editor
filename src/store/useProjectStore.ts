@@ -23,7 +23,7 @@ import type {
   ShapeType,
   TextElement,
 } from './types';
-import { devicesByPlatform } from '@/lib/devices';
+import { devices, devicesByPlatform, getOrientedFrameDimensions } from '@/lib/devices';
 import {
   createDefaultDeviceFrameElement,
   createDefaultImageElement,
@@ -174,6 +174,18 @@ interface ProjectStore {
   setExportSizeIndex: (index: number) => void;
   setCanvasView: (view: CanvasView) => void;
   setZoom: (zoom: number) => void;
+
+  // Layer reorder
+  reorderElementZIndices: (orderedIds: string[]) => void;
+
+  // Clipboard (copy/paste)
+  clipboard: CanvasElement[] | null;
+  copySelectedElements: () => void;
+  pasteElements: () => void;
+
+  // Snap guides (transient, not persisted)
+  snapGuides: { type: 'horizontal' | 'vertical'; position: number }[];
+  setSnapGuides: (guides: { type: 'horizontal' | 'vertical'; position: number }[]) => void;
 
   // Getters
   getSelectedScreenshot: () => Screenshot | null;
@@ -571,7 +583,29 @@ export const useProjectStore = create<ProjectStore>()(
           const s = findScreenshotWithElement(state.project, elementId);
           if (!s) return;
           const el = s.elements.find((e) => e.id === elementId);
-          if (el && el.type === 'device-frame') Object.assign(el, updates);
+          if (!el || el.type !== 'device-frame') return;
+
+          // If orientation is changing, recalculate transform to match new aspect ratio
+          if (updates.orientation && updates.orientation !== el.orientation) {
+            const def = devices[el.device];
+            if (def) {
+              const oldOriented = getOrientedFrameDimensions(def, el.orientation);
+              const newOriented = getOrientedFrameDimensions(def, updates.orientation);
+              const oldAspect = oldOriented.frameWidth / oldOriented.frameHeight;
+              const newAspect = newOriented.frameWidth / newOriented.frameHeight;
+
+              // Preserve center point and height, adjust width for new aspect ratio
+              const centerX = el.transform.x + el.transform.width / 2;
+              const centerY = el.transform.y + el.transform.height / 2;
+
+              // Scale width relative to aspect ratio change
+              const newWidth = el.transform.width * (newAspect / oldAspect);
+              el.transform.width = newWidth;
+              el.transform.x = centerX - newWidth / 2;
+            }
+          }
+
+          Object.assign(el, updates);
         })),
 
       updateImageElement: (elementId, updates) =>
@@ -660,6 +694,69 @@ export const useProjectStore = create<ProjectStore>()(
       setCanvasView: (view) => set({ canvasView: view }),
       setZoom: (zoom) => set({ zoom: Math.max(10, Math.min(400, zoom)) }),
 
+      // ─── Layer reorder ────────────────────────────────────────────────
+
+      reorderElementZIndices: (orderedIds) =>
+        set(produce((state: ProjectStore) => {
+          const s = getPlatformScreenshots(state.project).find(
+            (s) => s.id === state.project.selectedScreenshotId
+          );
+          if (!s) return;
+          orderedIds.forEach((id, i) => {
+            const el = s.elements.find((e) => e.id === id);
+            if (el) el.zIndex = i;
+          });
+        })),
+
+      // ─── Clipboard (copy/paste) ───────────────────────────────────────
+
+      clipboard: null,
+
+      copySelectedElements: () => {
+        const state = get();
+        if (state.selectedElementIds.length === 0) return;
+        const screenshot = getPlatformScreenshots(state.project).find(
+          (s) => s.id === state.project.selectedScreenshotId
+        );
+        if (!screenshot) return;
+        const selected = screenshot.elements.filter((e) =>
+          state.selectedElementIds.includes(e.id)
+        );
+        const cloned: CanvasElement[] = JSON.parse(JSON.stringify(selected));
+        set({ clipboard: cloned });
+      },
+
+      pasteElements: () =>
+        set(produce((state: ProjectStore) => {
+          if (!state.clipboard || state.clipboard.length === 0) return;
+          const s = getPlatformScreenshots(state.project).find(
+            (s) => s.id === state.project.selectedScreenshotId
+          );
+          if (!s) return;
+          const maxZ = s.elements.length > 0 ? Math.max(...s.elements.map((e) => e.zIndex)) : 0;
+          const newIds: string[] = [];
+          state.clipboard.forEach((orig, i) => {
+            const copy: CanvasElement = JSON.parse(JSON.stringify(orig));
+            copy.id = nanoid();
+            copy.transform.x += 3;
+            copy.transform.y += 3;
+            copy.zIndex = maxZ + 1 + i;
+            s.elements.push(copy);
+            newIds.push(copy.id);
+          });
+          state.selectedElementIds = newIds;
+          // Update clipboard offsets for repeated paste
+          state.clipboard.forEach((el) => {
+            el.transform.x += 3;
+            el.transform.y += 3;
+          });
+        })),
+
+      // ─── Snap guides (transient) ──────────────────────────────────────
+
+      snapGuides: [],
+      setSnapGuides: (guides) => set({ snapGuides: guides }),
+
       // ─── Getters ───────────────────────────────────────────────────────
 
       getSelectedScreenshot: () => {
@@ -705,7 +802,7 @@ export const useProjectStore = create<ProjectStore>()(
     ),
     {
       name: 'app-store-screenshot-editor',
-      version: 6,
+      version: 7,
       migrate: (persisted: any, version: number) => {
         if (version < 2) {
           // Migrate from v1 (flat Screenshot fields) to v2 (elements array)
@@ -849,6 +946,26 @@ export const useProjectStore = create<ProjectStore>()(
             } catch {}
           }
         }
+        if (version < 7) {
+          // Migrate from v6 to v7: add screenshotFit, screenshotOffset, screenshotScale to device-frame elements
+          const state = persisted as any;
+          if (state?.project?.screenshotsByPlatform) {
+            for (const platform of Object.keys(state.project.screenshotsByPlatform)) {
+              const screenshots = state.project.screenshotsByPlatform[platform];
+              if (!Array.isArray(screenshots)) continue;
+              for (const screenshot of screenshots) {
+                if (!screenshot.elements) continue;
+                for (const el of screenshot.elements) {
+                  if (el.type === 'device-frame') {
+                    if (el.screenshotFit === undefined) el.screenshotFit = 'contain';
+                    if (el.screenshotOffset === undefined) el.screenshotOffset = { x: 0, y: 0 };
+                    if (el.screenshotScale === undefined) el.screenshotScale = 1;
+                  }
+                }
+              }
+            }
+          }
+        }
         return persisted;
       },
       partialize: (state) => ({
@@ -864,6 +981,7 @@ export const useProjectStore = create<ProjectStore>()(
         appView: state.appView,
         projectList: state.projectList,
         activeProjectId: state.activeProjectId,
+        // Note: clipboard, snapGuides, selectedElementIds, editingTextElementId are NOT persisted
       }),
     }
   )

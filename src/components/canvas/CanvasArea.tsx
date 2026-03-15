@@ -3,7 +3,8 @@ import { ScreenshotCard } from './ScreenshotCard';
 import { InteractiveCanvas } from './InteractiveCanvas';
 import { getExportSizesForPlatform } from '@/lib/exportSizes';
 import { platformLabels } from '@/lib/devices';
-import { ImagePlus, Grid2x2, Layers, Monitor } from 'lucide-react';
+import { ImagePlus, Grid2x2, Layers, Monitor, Ruler } from 'lucide-react';
+import { Rulers, RULER_SIZE } from './Rulers';
 import type { CanvasView, Platform, Screenshot } from '@/store/types';
 import { useCallback, useEffect, useRef } from 'react';
 
@@ -71,6 +72,35 @@ export function CanvasArea() {
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
         e.preventDefault();
         useProjectStore.temporal.getState().redo();
+      }
+      // Copy: Cmd+C / Ctrl+C
+      if ((e.metaKey || e.ctrlKey) && e.key === 'c' && !e.shiftKey && !isEditingText) {
+        const tag = (e.target as HTMLElement).tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        if (selectedElementIds.length > 0) {
+          e.preventDefault();
+          useProjectStore.getState().copySelectedElements();
+        }
+      }
+      // Paste: Cmd+V / Ctrl+V
+      if ((e.metaKey || e.ctrlKey) && e.key === 'v' && !e.shiftKey && !isEditingText) {
+        const tag = (e.target as HTMLElement).tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        const clipboard = useProjectStore.getState().clipboard;
+        if (clipboard && clipboard.length > 0) {
+          e.preventDefault();
+          useProjectStore.getState().pasteElements();
+        }
+        // If no internal clipboard, let the default paste handler create text element
+      }
+      // Duplicate: Cmd+D / Ctrl+D
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd' && !isEditingText) {
+        const tag = (e.target as HTMLElement).tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        if (selectedElementIds.length > 0) {
+          e.preventDefault();
+          selectedElementIds.forEach((id) => useProjectStore.getState().duplicateElement(id));
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -286,27 +316,49 @@ function SingleView({
   return (
     <div className="flex flex-col items-center justify-center min-h-full" data-canvas-outer="true">
       <div
-        className="relative rounded-xl overflow-hidden"
+        className="relative"
         style={{
-          width: previewWidth * zoomFactor,
-          height: previewHeight * zoomFactor,
-          boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 25px 80px rgba(0,0,0,0.5)',
+          width: previewWidth * zoomFactor + RULER_SIZE,
+          height: previewHeight * zoomFactor + RULER_SIZE,
         }}
       >
+        {/* Rulers */}
+        <Rulers canvasWidth={exportSize.width} canvasHeight={exportSize.height} scale={scale} />
+
+        {/* Canvas area offset by ruler size */}
         <div
+          className="relative"
           style={{
-            width: exportSize.width,
-            height: exportSize.height,
-            transform: `scale(${scale})`,
-            transformOrigin: 'top left',
+            position: 'absolute',
+            top: RULER_SIZE,
+            left: RULER_SIZE,
+            width: previewWidth * zoomFactor,
+            height: previewHeight * zoomFactor,
           }}
         >
-          <InteractiveCanvas
-            screenshot={screenshot}
-            width={exportSize.width}
-            height={exportSize.height}
-            scale={scale}
+          {/* Visual frame with rounded corners and shadow */}
+          <div
+            className="absolute inset-0 rounded-xl overflow-hidden"
+            style={{
+              boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 25px 80px rgba(0,0,0,0.5)',
+              pointerEvents: 'none',
+            }}
           />
+          <div
+            style={{
+              width: exportSize.width,
+              height: exportSize.height,
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+            }}
+          >
+            <InteractiveCanvas
+              screenshot={screenshot}
+              width={exportSize.width}
+              height={exportSize.height}
+              scale={scale}
+            />
+          </div>
         </div>
       </div>
       <div className="mt-3 text-[11px] text-white/30">

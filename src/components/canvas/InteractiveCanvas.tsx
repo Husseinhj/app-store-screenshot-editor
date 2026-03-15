@@ -5,6 +5,7 @@ import { BackgroundLayer } from './BackgroundLayer';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
 import { SelectionBox } from './SelectionBox';
 import { InlineTextEditor } from './InlineTextEditor';
+import { SnapGuides } from './SnapGuides';
 import { useDragElement } from '@/hooks/useDragElement';
 import { useResizeElement } from '@/hooks/useResizeElement';
 import { useRotateElement } from '@/hooks/useRotateElement';
@@ -133,83 +134,91 @@ export function InteractiveCanvas({ screenshot, width, height, scale }: Props) {
     <div
       ref={canvasRef}
       className="relative"
-      style={{ width, height, overflow: 'hidden' }}
+      style={{ width, height }}
       onMouseDown={handleBackgroundMouseDown}
     >
-      <BackgroundLayer background={screenshot.background} width={width} height={height} />
+      {/* Content layer — clipped to canvas bounds */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        <BackgroundLayer background={screenshot.background} width={width} height={height} />
 
-      {sortedElements.map((el) => (
-        <ElementWithInteraction
-          key={el.id}
-          elementId={el.id}
-          canvasWidth={width}
-          canvasHeight={height}
-          scale={scale}
-          isSelected={selectedElementIds.includes(el.id)}
-        >
-          <CanvasElementRenderer
-            element={el}
+        {sortedElements.map((el) => (
+          <ElementWithInteraction
+            key={el.id}
+            elementId={el.id}
             canvasWidth={width}
             canvasHeight={height}
+            scale={scale}
+            isSelected={selectedElementIds.includes(el.id)}
+          >
+            <CanvasElementRenderer
+              element={el}
+              canvasWidth={width}
+              canvasHeight={height}
+            />
+          </ElementWithInteraction>
+        ))}
+
+        {/* Inline text editor overlay */}
+        {editingTextElement && (
+          <div
+            style={{
+              position: 'absolute',
+              left: (editingTextElement.transform.x / 100) * width,
+              top: (editingTextElement.transform.y / 100) * height,
+              width: (editingTextElement.transform.width / 100) * width,
+              height: (editingTextElement.transform.height / 100) * height,
+              zIndex: 10002,
+              transform: editingTextElement.transform.rotation
+                ? `rotate(${editingTextElement.transform.rotation}deg)`
+                : undefined,
+              transformOrigin: 'center center',
+            }}
+          >
+            <InlineTextEditor
+              element={editingTextElement}
+              pixelWidth={(editingTextElement.transform.width / 100) * width}
+              pixelHeight={(editingTextElement.transform.height / 100) * height}
+            />
+          </div>
+        )}
+
+        {/* Snap guides */}
+        <SnapGuides canvasWidth={width} canvasHeight={height} />
+
+        {/* Marquee selection rectangle */}
+        {marqueeRect && (
+          <div
+            style={{
+              position: 'absolute',
+              left: marqueeRect.left,
+              top: marqueeRect.top,
+              width: marqueeRect.width,
+              height: marqueeRect.height,
+              border: '1px dashed #3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              pointerEvents: 'none',
+              zIndex: 99999,
+            }}
           />
-        </ElementWithInteraction>
-      ))}
+        )}
+      </div>
 
-      {/* Selection box overlay for each selected element */}
-      {selectedElements.map((el) => (
-        <SelectedElementOverlay
-          key={el.id}
-          elementId={el.id}
-          transform={el.transform}
-          flipX={el.flipX}
-          flipY={el.flipY}
-          canvasWidth={width}
-          canvasHeight={height}
-          scale={scale}
-          multiSelect={selectedElements.length > 1}
-        />
-      ))}
-
-      {/* Inline text editor overlay */}
-      {editingTextElement && (
-        <div
-          style={{
-            position: 'absolute',
-            left: (editingTextElement.transform.x / 100) * width,
-            top: (editingTextElement.transform.y / 100) * height,
-            width: (editingTextElement.transform.width / 100) * width,
-            height: (editingTextElement.transform.height / 100) * height,
-            zIndex: 10002,
-            transform: editingTextElement.transform.rotation
-              ? `rotate(${editingTextElement.transform.rotation}deg)`
-              : undefined,
-            transformOrigin: 'center center',
-          }}
-        >
-          <InlineTextEditor
-            element={editingTextElement}
-            pixelWidth={(editingTextElement.transform.width / 100) * width}
-            pixelHeight={(editingTextElement.transform.height / 100) * height}
+      {/* Selection overlay — NOT clipped, so handles extend beyond canvas */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'visible', pointerEvents: 'none' }}>
+        {selectedElements.map((el) => (
+          <SelectedElementOverlay
+            key={el.id}
+            elementId={el.id}
+            transform={el.transform}
+            flipX={el.flipX}
+            flipY={el.flipY}
+            canvasWidth={width}
+            canvasHeight={height}
+            scale={scale}
+            multiSelect={selectedElements.length > 1}
           />
-        </div>
-      )}
-
-      {/* Marquee selection rectangle */}
-      {marqueeRect && (
-        <div
-          style={{
-            position: 'absolute',
-            left: marqueeRect.left,
-            top: marqueeRect.top,
-            width: marqueeRect.width,
-            height: marqueeRect.height,
-            border: '1px dashed #3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            pointerEvents: 'none',
-            zIndex: 99999,
-          }}
-        />
-      )}
+        ))}
+      </div>
     </div>
   );
 }
