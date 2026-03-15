@@ -2,6 +2,8 @@
 
 A browser-based visual editor for designing App Store and Play Store screenshots. Built with React, TypeScript, and Tailwind CSS.
 
+**[Live Demo](https://husseinhj.github.io/app-store-screenshot-editor/)**
+
 ![Editor Screenshot](docs/screenshot-editor.png)
 
 ## Features
