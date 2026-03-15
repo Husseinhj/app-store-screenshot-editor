@@ -47,13 +47,13 @@ export function ImageElementPanel({ element }: Props) {
 
       {/* Object fit */}
       <div className="mb-3">
-        <label className="mb-1 block text-[10px] text-white/40">Fit</label>
-        <div className="grid grid-cols-3 gap-1 rounded-lg bg-surface-700 p-1">
+        <label className="mb-1 block text-[11px] text-white/40">Fit</label>
+        <div className="grid grid-cols-3 gap-1 rounded bg-surface-700 p-0.5">
           {(['cover', 'contain', 'fill'] as const).map((fit) => (
             <button
               key={fit}
               onClick={() => updateImageElement(element.id, { objectFit: fit })}
-              className={`rounded-md py-1.5 text-[10px] font-medium transition-colors capitalize ${
+              className={`rounded py-1 text-[11px] font-medium transition-colors capitalize ${
                 element.objectFit === fit
                   ? 'bg-accent text-white'
                   : 'text-white/50 hover:text-white/80'
@@ -67,7 +67,7 @@ export function ImageElementPanel({ element }: Props) {
 
       {/* Opacity */}
       <div className="mb-3">
-        <label className="mb-1 block text-[10px] text-white/40">
+        <label className="mb-1 block text-[11px] text-white/40">
           Opacity: {Math.round(element.opacity * 100)}%
         </label>
         <input
@@ -83,7 +83,7 @@ export function ImageElementPanel({ element }: Props) {
 
       {/* Border radius */}
       <div>
-        <label className="mb-1 block text-[10px] text-white/40">
+        <label className="mb-1 block text-[11px] text-white/40">
           Border Radius: {element.borderRadius}px
         </label>
         <input

@@ -234,12 +234,12 @@ export function ColorPickerWithAlpha({ color, onChange, label }: Props) {
 
   return (
     <div>
-      {label && <label className="mb-1 block text-[10px] text-white/40">{label}</label>}
+      {label && <label className="mb-1 block text-[11px] text-white/40">{label}</label>}
       <div className="flex items-center gap-1.5">
         <button
           ref={swatchRef}
           onClick={() => setOpen(!open)}
-          className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg ring-1 ring-white/20"
+          className="relative h-6 w-6 shrink-0 overflow-hidden rounded ring-1 ring-white/20"
           style={swatchStyle}
         >
           {parsed.a < 1 && (
@@ -255,12 +255,12 @@ export function ColorPickerWithAlpha({ color, onChange, label }: Props) {
           onChange={(e) => setTextValue(e.target.value)}
           onBlur={handleTextCommit}
           onKeyDown={(e) => e.key === 'Enter' && handleTextCommit()}
-          className="min-w-0 flex-1 rounded-lg bg-surface-700 px-2 py-1.5 text-[11px] text-white outline-none ring-1 ring-white/10 focus:ring-accent/50 font-mono"
+          className="min-w-0 flex-1 rounded bg-surface-700 px-2 py-1 text-[11px] text-white outline-none ring-0 focus:ring-1 focus:ring-accent/50 font-mono"
         />
         <select
           value={format}
           onChange={(e) => setFormat(e.target.value as ColorFormat)}
-          className="shrink-0 rounded-lg bg-surface-700 px-1 py-1.5 text-[10px] text-white/60 outline-none ring-1 ring-white/10 cursor-pointer"
+          className="shrink-0 rounded bg-surface-700 px-1 py-1 text-[11px] text-white/60 outline-none ring-0 focus:ring-1 focus:ring-accent/50 cursor-pointer"
         >
           <option value="hex">HEX</option>
           <option value="rgba">RGBA</option>
@@ -272,7 +272,7 @@ export function ColorPickerWithAlpha({ color, onChange, label }: Props) {
         createPortal(
           <div
             ref={popoverRef}
-            className="fixed z-[99999] rounded-xl bg-surface-800 p-3 shadow-2xl ring-1 ring-white/10"
+            className="fixed z-[99999] rounded-lg bg-surface-800 p-3 shadow-2xl ring-1 ring-white/[0.06]"
             style={{
               top: popoverPos.top,
               left: popoverPos.left,
@@ -285,7 +285,7 @@ export function ColorPickerWithAlpha({ color, onChange, label }: Props) {
               style={{ width: '100%' }}
             />
             <div className="mt-3 flex items-center gap-2">
-              <label className="text-[10px] text-white/40 shrink-0">Opacity</label>
+              <label className="text-[11px] text-white/40 shrink-0">Opacity</label>
               <input
                 type="range"
                 min={0}

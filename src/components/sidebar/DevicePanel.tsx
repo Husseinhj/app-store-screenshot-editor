@@ -114,9 +114,9 @@ export function DevicePanel({ element }: Props) {
                       <button
                         key={deviceId}
                         onClick={() => updateDeviceElement(element.id, { device: deviceId, customFrameId: null })}
-                        className={`w-full rounded-lg px-3 py-1.5 text-left text-xs transition-colors ${
+                        className={`w-full rounded px-2 py-1 text-left text-[11px] transition-colors ${
                           element.device === deviceId && !element.customFrameId
-                            ? 'bg-accent/20 text-white ring-1 ring-accent/50'
+                            ? 'bg-accent/15 text-white ring-1 ring-accent/40'
                             : 'text-white/60 hover:bg-surface-600 hover:text-white'
                         }`}
                       >
@@ -136,15 +136,15 @@ export function DevicePanel({ element }: Props) {
 
       {/* Custom frames section */}
       <div className="mb-3">
-        <label className="mb-1.5 block text-[10px] text-white/40">Custom Frames</label>
+        <label className="mb-1.5 block text-[11px] text-white/40">Custom Frames</label>
         <div className="space-y-1">
           {customFrames.map((frame) => (
             <div key={frame.id} className="flex items-center gap-1">
               <button
                 onClick={() => updateDeviceElement(element.id, { customFrameId: frame.id })}
-                className={`flex-1 rounded-lg px-3 py-2 text-left text-xs transition-colors ${
+                className={`flex-1 rounded px-2 py-1 text-left text-[11px] transition-colors ${
                   element.customFrameId === frame.id
-                    ? 'bg-accent/20 text-white ring-1 ring-accent/50'
+                    ? 'bg-accent/15 text-white ring-1 ring-accent/40'
                     : 'text-white/60 hover:bg-surface-600 hover:text-white'
                 }`}
               >
@@ -184,7 +184,7 @@ export function DevicePanel({ element }: Props) {
           {/* Edit screen rect inline */}
           {editingFrame && (
             <div className="rounded-lg bg-surface-700 p-2 mt-1 space-y-1.5">
-              <label className="text-[10px] text-white/40">Screen Rect (SVG units)</label>
+              <label className="text-[11px] text-white/40">Screen Rect (SVG units)</label>
               <div className="grid grid-cols-2 gap-1">
                 {(['x', 'y', 'width', 'height'] as const).map((field) => (
                   <div key={field}>
@@ -229,11 +229,11 @@ export function DevicePanel({ element }: Props) {
       {/* Orientation toggle — iPad devices only */}
       {currentDevice.platform === 'ipad' && (
         <div className="mb-3">
-          <label className="mb-1.5 block text-[10px] text-white/40">Orientation</label>
-          <div className="grid grid-cols-2 gap-1 rounded-lg bg-surface-700 p-1">
+          <label className="mb-1.5 block text-[11px] text-white/40">Orientation</label>
+          <div className="grid grid-cols-2 gap-1 rounded bg-surface-700 p-0.5">
             <button
               onClick={() => updateDeviceElement(element.id, { orientation: 'portrait' })}
-              className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-[10px] font-medium transition-colors ${
+              className={`flex items-center justify-center gap-1.5 rounded py-1 text-[11px] font-medium transition-colors ${
                 (element.orientation ?? 'portrait') === 'portrait'
                   ? 'bg-accent text-white'
                   : 'text-white/50 hover:text-white/80'
@@ -244,7 +244,7 @@ export function DevicePanel({ element }: Props) {
             </button>
             <button
               onClick={() => updateDeviceElement(element.id, { orientation: 'landscape' })}
-              className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-[10px] font-medium transition-colors ${
+              className={`flex items-center justify-center gap-1.5 rounded py-1 text-[11px] font-medium transition-colors ${
                 (element.orientation ?? 'portrait') === 'landscape'
                   ? 'bg-accent text-white'
                   : 'text-white/50 hover:text-white/80'
@@ -280,11 +280,11 @@ export function DevicePanel({ element }: Props) {
       {/* Frame style toggle (SVG Mockup vs CSS) — only for built-in devices */}
       {element.showDeviceFrame && !element.customFrameId && currentDevice.svgPath && (
         <div className="mb-3">
-          <label className="mb-1.5 block text-[10px] text-white/40">Frame Style</label>
-          <div className="grid grid-cols-2 gap-1 rounded-lg bg-surface-700 p-1">
+          <label className="mb-1.5 block text-[11px] text-white/40">Frame Style</label>
+          <div className="grid grid-cols-2 gap-1 rounded bg-surface-700 p-0.5">
             <button
               onClick={() => updateDeviceElement(element.id, { frameStyle: 'svg' })}
-              className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-[10px] font-medium transition-colors ${
+              className={`flex items-center justify-center gap-1.5 rounded py-1 text-[11px] font-medium transition-colors ${
                 element.frameStyle === 'svg'
                   ? 'bg-accent text-white'
                   : 'text-white/50 hover:text-white/80'
@@ -295,7 +295,7 @@ export function DevicePanel({ element }: Props) {
             </button>
             <button
               onClick={() => updateDeviceElement(element.id, { frameStyle: 'css' })}
-              className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-[10px] font-medium transition-colors ${
+              className={`flex items-center justify-center gap-1.5 rounded py-1 text-[11px] font-medium transition-colors ${
                 element.frameStyle === 'css'
                   ? 'bg-accent text-white'
                   : 'text-white/50 hover:text-white/80'
@@ -318,15 +318,15 @@ export function DevicePanel({ element }: Props) {
         if (visibleVariants.length <= 1) return null;
         return (
           <div>
-            <label className="mb-1.5 block text-[10px] text-white/40">Color</label>
+            <label className="mb-1.5 block text-[11px] text-white/40">Color</label>
             <div className="grid grid-cols-2 gap-1.5">
               {visibleVariants.map((variant) => (
                 <button
                   key={variant.id}
                   onClick={() => updateDeviceElement(element.id, { frameColorVariant: variant.id })}
-                  className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-all ${
+                  className={`flex items-center gap-2 rounded px-2.5 py-2 text-left transition-all ${
                     element.frameColorVariant === variant.id
-                      ? 'bg-accent/20 ring-1 ring-accent/50'
+                      ? 'bg-accent/15 ring-1 ring-accent/40'
                       : 'bg-surface-700 hover:bg-surface-600'
                   }`}
                 >
@@ -345,8 +345,8 @@ export function DevicePanel({ element }: Props) {
       {/* Screenshot Fit Mode */}
       {element.screenshotImageUrl && (
         <div className="mt-3">
-          <label className="mb-1.5 block text-[10px] text-white/40">Screenshot Fit</label>
-          <div className="grid grid-cols-4 gap-1 rounded-lg bg-surface-700 p-1">
+          <label className="mb-1.5 block text-[11px] text-white/40">Screenshot Fit</label>
+          <div className="grid grid-cols-4 gap-1 rounded bg-surface-700 p-0.5">
             {([
               { value: 'contain' as ScreenshotFit, label: 'Fit', icon: Minimize },
               { value: 'cover' as ScreenshotFit, label: 'Fill', icon: Maximize },
@@ -356,7 +356,7 @@ export function DevicePanel({ element }: Props) {
               <button
                 key={value}
                 onClick={() => updateDeviceElement(element.id, { screenshotFit: value })}
-                className={`flex flex-col items-center gap-0.5 rounded-md py-1.5 text-[9px] font-medium transition-colors ${
+                className={`flex flex-col items-center gap-0.5 rounded py-1 text-[9px] font-medium transition-colors ${
                   (element.screenshotFit ?? 'contain') === value
                     ? 'bg-accent text-white'
                     : 'text-white/50 hover:text-white/80'
@@ -374,7 +374,7 @@ export function DevicePanel({ element }: Props) {
       {element.screenshotImageUrl && (
         <div className="mt-3">
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-[10px] text-white/40">Screenshot Position</label>
+            <label className="text-[11px] text-white/40">Screenshot Position</label>
             <button
               onClick={() => updateDeviceElement(element.id, {
                 screenshotOffset: { x: 0, y: 0 },
@@ -395,7 +395,7 @@ export function DevicePanel({ element }: Props) {
                 onChange={(e) => updateDeviceElement(element.id, {
                   screenshotOffset: { ...(element.screenshotOffset ?? { x: 0, y: 0 }), x: Number(e.target.value) }
                 })}
-                className="w-full rounded-md bg-surface-700 px-2 py-1 text-[10px] text-white outline-none ring-1 ring-white/10"
+                className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white outline-none ring-0 focus:ring-1 focus:ring-accent/50"
               />
             </div>
             <div>
@@ -407,7 +407,7 @@ export function DevicePanel({ element }: Props) {
                 onChange={(e) => updateDeviceElement(element.id, {
                   screenshotOffset: { ...(element.screenshotOffset ?? { x: 0, y: 0 }), y: Number(e.target.value) }
                 })}
-                className="w-full rounded-md bg-surface-700 px-2 py-1 text-[10px] text-white outline-none ring-1 ring-white/10"
+                className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white outline-none ring-0 focus:ring-1 focus:ring-accent/50"
               />
             </div>
           </div>

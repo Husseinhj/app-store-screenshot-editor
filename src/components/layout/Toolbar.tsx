@@ -17,7 +17,7 @@ export function Toolbar() {
   const redo = () => useProjectStore.temporal.getState().redo();
 
   return (
-    <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/10 bg-surface-800 px-4">
+    <div className="flex h-10 shrink-0 items-center justify-between border-b border-white/[0.06] bg-surface-800 px-4">
       <div className="flex items-center gap-3">
         <button
           onClick={closeProject}
@@ -27,7 +27,7 @@ export function Toolbar() {
           <Home size={16} />
         </button>
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500" />
+          <div className="h-6 w-6 bg-accent rounded-md" />
           <input
             type="text"
             value={projectName}
@@ -74,7 +74,7 @@ export function Toolbar() {
 
         <button
           onClick={() => useProjectStore.getState().openAppStorePreview()}
-          className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-white/70 transition-colors hover:bg-surface-600 hover:text-white"
+          className="flex items-center gap-2 rounded-lg border border-white/[0.08] px-3 py-1.5 text-xs font-medium text-white/70 transition-colors hover:bg-surface-600 hover:text-white"
           title="App Store Preview (⌘⇧P)"
         >
           <Eye size={14} />

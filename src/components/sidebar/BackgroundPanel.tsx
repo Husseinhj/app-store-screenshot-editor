@@ -63,12 +63,12 @@ export function BackgroundPanel() {
   return (
     <SidebarSection title="Background">
       {/* Type toggle */}
-      <div className="mb-3 grid grid-cols-3 gap-1 rounded-lg bg-surface-700 p-1">
+      <div className="mb-3 grid grid-cols-3 gap-1 rounded bg-surface-700 p-0.5">
         {bgTypes.map((t) => (
           <button
             key={t.value}
             onClick={() => updateBackground({ type: t.value })}
-            className={`rounded-md py-1.5 text-[10px] font-medium transition-colors ${
+            className={`rounded py-1 text-[11px] font-medium transition-colors ${
               background.type === t.value
                 ? 'bg-accent text-white'
                 : 'text-white/50 hover:text-white/80'
@@ -82,7 +82,7 @@ export function BackgroundPanel() {
       {/* Solid color */}
       {background.type === 'solid' && (
         <div>
-          <label className="mb-1.5 block text-[10px] text-white/40">Presets</label>
+          <label className="mb-1.5 block text-[11px] text-white/40">Presets</label>
           <div className="mb-3 grid grid-cols-6 gap-1.5">
             {presetSolids.map((color) => (
               <button
@@ -114,7 +114,7 @@ export function BackgroundPanel() {
       {background.type === 'gradient' && (
         <div>
           {/* Presets */}
-          <label className="mb-1.5 block text-[10px] text-white/40">Presets</label>
+          <label className="mb-1.5 block text-[11px] text-white/40">Presets</label>
           <div className="mb-3 grid grid-cols-4 gap-1.5">
             {presetGradients.map((g, i) => (
               <button
@@ -130,7 +130,7 @@ export function BackgroundPanel() {
 
           {/* Angle */}
           <div className="mb-3">
-            <label className="mb-1 block text-[10px] text-white/40">
+            <label className="mb-1 block text-[11px] text-white/40">
               Angle: {background.gradient.angle}°
             </label>
             <input

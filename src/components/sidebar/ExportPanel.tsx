@@ -20,9 +20,9 @@ export function ExportPanel() {
           <button
             key={size.label}
             onClick={() => setExportSizeIndex(i)}
-            className={`w-full rounded-lg px-3 py-2 text-left text-xs transition-colors ${
+            className={`w-full rounded px-2 py-1 text-left text-[11px] transition-colors ${
               exportSizeIndex === i
-                ? 'bg-accent/20 text-white ring-1 ring-accent/50'
+                ? 'bg-accent/15 text-white ring-1 ring-accent/40'
                 : 'text-white/60 hover:bg-surface-600 hover:text-white'
             }`}
           >

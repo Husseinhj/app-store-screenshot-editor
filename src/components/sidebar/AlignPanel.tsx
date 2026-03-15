@@ -128,7 +128,7 @@ export function AlignPanel() {
     <SidebarSection title="Align">
       {/* Align to canvas */}
       <div className="mb-3">
-        <label className="mb-1.5 block text-[10px] text-white/40">Align to Canvas</label>
+        <label className="mb-1.5 block text-[11px] text-white/40">Align to Canvas</label>
         <div className="grid grid-cols-3 gap-1">
           <button onClick={() => alignToCanvas('left')} className={btnClass} title="Align Left">
             <AlignStartVertical size={14} className="mx-auto" />
@@ -154,7 +154,7 @@ export function AlignPanel() {
       {/* Align to each other — only when multi-selected */}
       {isMulti && (
         <div className="mb-3">
-          <label className="mb-1.5 block text-[10px] text-white/40">Align to Each Other</label>
+          <label className="mb-1.5 block text-[11px] text-white/40">Align to Each Other</label>
           <div className="grid grid-cols-3 gap-1">
             <button onClick={() => alignToEachOther('left')} className={btnClass} title="Align Lefts">
               <AlignStartVertical size={14} className="mx-auto" />
@@ -181,7 +181,7 @@ export function AlignPanel() {
       {/* Distribute — only when 3+ elements selected */}
       {selectedElementIds.length >= 3 && (
         <div>
-          <label className="mb-1.5 block text-[10px] text-white/40">Distribute</label>
+          <label className="mb-1.5 block text-[11px] text-white/40">Distribute</label>
           <div className="grid grid-cols-2 gap-1">
             <button onClick={distributeHorizontally} className={btnClass + ' text-[10px]'}>
               Horizontal

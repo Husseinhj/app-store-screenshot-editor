@@ -20,45 +20,45 @@ export function TransformPanel({ element }: Props) {
       {/* Position & size */}
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div>
-          <label className="mb-1 block text-[10px] text-white/40">X %</label>
+          <label className="mb-1 block text-[11px] text-white/40">X %</label>
           <input
             type="number"
             value={Math.round(element.transform.x * 10) / 10}
             onChange={(e) => updateElementTransform(element.id, { x: Number(e.target.value) })}
             step={0.5}
-            className="w-full rounded-lg bg-surface-700 px-3 py-1.5 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
+            className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white outline-none ring-0 focus:ring-1 focus:ring-accent/50"
           />
         </div>
         <div>
-          <label className="mb-1 block text-[10px] text-white/40">Y %</label>
+          <label className="mb-1 block text-[11px] text-white/40">Y %</label>
           <input
             type="number"
             value={Math.round(element.transform.y * 10) / 10}
             onChange={(e) => updateElementTransform(element.id, { y: Number(e.target.value) })}
             step={0.5}
-            className="w-full rounded-lg bg-surface-700 px-3 py-1.5 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
+            className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white outline-none ring-0 focus:ring-1 focus:ring-accent/50"
           />
         </div>
         <div>
-          <label className="mb-1 block text-[10px] text-white/40">W %</label>
+          <label className="mb-1 block text-[11px] text-white/40">W %</label>
           <input
             type="number"
             value={Math.round(element.transform.width * 10) / 10}
             onChange={(e) => updateElementTransform(element.id, { width: Math.max(3, Number(e.target.value)) })}
             step={0.5}
             min={3}
-            className="w-full rounded-lg bg-surface-700 px-3 py-1.5 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
+            className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white outline-none ring-0 focus:ring-1 focus:ring-accent/50"
           />
         </div>
         <div>
-          <label className="mb-1 block text-[10px] text-white/40">H %</label>
+          <label className="mb-1 block text-[11px] text-white/40">H %</label>
           <input
             type="number"
             value={Math.round(element.transform.height * 10) / 10}
             onChange={(e) => updateElementTransform(element.id, { height: Math.max(3, Number(e.target.value)) })}
             step={0.5}
             min={3}
-            className="w-full rounded-lg bg-surface-700 px-3 py-1.5 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
+            className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white outline-none ring-0 focus:ring-1 focus:ring-accent/50"
           />
         </div>
       </div>
@@ -66,7 +66,7 @@ export function TransformPanel({ element }: Props) {
       {/* Rotation & Flip */}
       <div className="mb-3 flex items-end gap-2">
         <div className="flex-1">
-          <label className="mb-1 block text-[10px] text-white/40">
+          <label className="mb-1 block text-[11px] text-white/40">
             <RotateCw size={10} className="inline mr-1" />
             Rotation
           </label>
@@ -78,7 +78,7 @@ export function TransformPanel({ element }: Props) {
               step={1}
               min={0}
               max={360}
-              className="w-full rounded-lg bg-surface-700 px-3 py-1.5 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
+              className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white outline-none ring-0 focus:ring-1 focus:ring-accent/50"
             />
             <span className="text-[10px] text-white/30">°</span>
           </div>
@@ -89,7 +89,7 @@ export function TransformPanel({ element }: Props) {
             title="Flip Horizontal"
             className={`rounded p-1.5 transition-colors ${
               element.flipX
-                ? 'bg-accent/20 text-accent ring-1 ring-accent/40'
+                ? 'bg-accent/15 text-accent ring-1 ring-accent/40'
                 : 'text-white/40 hover:bg-surface-600 hover:text-white'
             }`}
           >
@@ -100,7 +100,7 @@ export function TransformPanel({ element }: Props) {
             title="Flip Vertical"
             className={`rounded p-1.5 transition-colors ${
               element.flipY
-                ? 'bg-accent/20 text-accent ring-1 ring-accent/40'
+                ? 'bg-accent/15 text-accent ring-1 ring-accent/40'
                 : 'text-white/40 hover:bg-surface-600 hover:text-white'
             }`}
           >

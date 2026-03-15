@@ -109,12 +109,12 @@ export function ProjectPanel() {
   return (
     <SidebarSection title="Project">
       {/* Platform selector */}
-      <div className="mb-3 grid grid-cols-4 gap-1 rounded-lg bg-surface-700 p-1">
+      <div className="mb-3 grid grid-cols-4 gap-1 rounded bg-surface-700 p-0.5">
         {platforms.map((p) => (
           <button
             key={p}
             onClick={() => setPlatform(p)}
-            className={`rounded-md px-1 py-1.5 text-[10px] font-medium transition-colors ${
+            className={`rounded px-1 py-1 text-[11px] font-medium transition-colors ${
               project.platform === p
                 ? 'bg-accent text-white'
                 : 'text-white/50 hover:text-white/80'
@@ -163,7 +163,7 @@ export function ProjectPanel() {
                 onClick={() => selectScreenshot(s.id)}
                 className={`group rounded-lg cursor-pointer transition-colors ${
                   isSelected
-                    ? 'bg-accent/20 ring-1 ring-accent/50'
+                    ? 'bg-accent/15 ring-1 ring-accent/40'
                     : 'hover:bg-surface-600'
                 }`}
               >
@@ -234,7 +234,7 @@ export function ProjectPanel() {
                       onClick={(e) => e.stopPropagation()}
                       placeholder="Add notes..."
                       rows={2}
-                      className="w-full resize-none rounded bg-surface-700 px-2 py-1.5 text-[10px] text-white/60 outline-none ring-1 ring-white/10 focus:ring-accent/50 placeholder:text-white/20"
+                      className="w-full resize-none rounded bg-surface-700 px-2 py-1 text-[11px] text-white/60 outline-none ring-0 focus:ring-1 focus:ring-accent/50 placeholder:text-white/20"
                     />
                   </div>
                 )}

@@ -13,7 +13,7 @@ interface Props {
 export function LeftPanel({ style, onCollapse }: Props) {
   return (
     <div
-      className="flex shrink-0 flex-col overflow-y-auto border-r border-white/10 bg-surface-800"
+      className="flex shrink-0 flex-col overflow-y-auto border-r border-white/[0.06] bg-surface-800"
       style={style}
     >
       {onCollapse && (

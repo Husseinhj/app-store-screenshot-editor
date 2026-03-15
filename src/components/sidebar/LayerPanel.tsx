@@ -50,7 +50,7 @@ function getElementIcon(element: CanvasElement) {
 
 // Group color palette for visual distinction
 const GROUP_COLORS = [
-  '#6366f1', // indigo
+  '#0d99ff', // blue
   '#f59e0b', // amber
   '#10b981', // emerald
   '#ef4444', // red
@@ -354,7 +354,7 @@ export function LayerPanel() {
                   onDragOver={(e) => handleDragOverGroup(e, item.groupId)}
                   onDrop={handleDrop}
                   onDragEnd={handleDragEnd}
-                  className={`group/hdr flex items-center gap-1 rounded-lg px-1 py-1 cursor-pointer hover:bg-surface-700 transition-colors ${isGroupDragged ? 'opacity-40' : ''} ${editingGroupId === item.groupId ? 'ring-1 ring-indigo-500/40' : ''}`}
+                  className={`group/hdr flex items-center gap-1 rounded-lg px-1 py-1 cursor-pointer hover:bg-surface-700 transition-colors ${isGroupDragged ? 'opacity-40' : ''} ${editingGroupId === item.groupId ? 'ring-1 ring-accent/40' : ''}`}
                   onClick={() => selectGroupMembers(item.groupId)}
                   onDoubleClick={(e) => {
                     e.stopPropagation();
@@ -447,7 +447,7 @@ export function LayerPanel() {
                     selectElement(element.id);
                   }
                 }}
-                className={`group flex items-center gap-1 rounded-lg py-1.5 cursor-pointer transition-colors ${
+                className={`group flex items-center gap-1 rounded-lg py-1 cursor-pointer transition-colors ${
                   indented ? 'pl-4 pr-1' : 'px-1'
                 } ${
                   isSelected

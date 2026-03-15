@@ -44,22 +44,22 @@ function HeroSection({ onNewProject }: { onNewProject: () => void }) {
     <section className="relative overflow-hidden px-6 py-16 sm:py-24 text-center">
       {/* Animated gradient background */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/10 to-pink-600/10" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-indigo-500/8 blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0d99ff]/20 via-[#5b6abf]/10 to-pink-600/10" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-accent/8 blur-3xl" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-purple-500/8 blur-3xl" />
       </div>
 
       {/* Content */}
       <div className="relative max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 rounded-full bg-white/8 px-4 py-1.5 mb-6 text-xs font-medium text-white/60 ring-1 ring-white/10">
-          <Sparkles size={12} className="text-indigo-400" />
+          <Sparkles size={12} className="text-accent" />
           Professional App Store Screenshots
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.1]">
           Design screenshots
           <br />
-          <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#38b0ff] via-[#5b8def] to-[#b07bf5] bg-clip-text text-transparent">
             that convert
           </span>
         </h1>
@@ -72,7 +72,7 @@ function HeroSection({ onNewProject }: { onNewProject: () => void }) {
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             onClick={onNewProject}
-            className="flex items-center gap-2 rounded-xl bg-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-400 hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98]"
+            className="flex items-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition-all hover:bg-accent-hover hover:shadow-accent/40 hover:scale-[1.02] active:scale-[0.98]"
           >
             <Plus size={16} />
             New Project
@@ -598,7 +598,7 @@ function TemplateGallerySection({
               onClick={() => setFilter(cat.value)}
               className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
                 filter === cat.value
-                  ? 'bg-indigo-500 text-white'
+                  ? 'bg-accent text-white'
                   : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60'
               }`}
             >
@@ -757,7 +757,7 @@ function TemplateGalleryCard({
   return (
     <button
       onClick={onUse}
-      className="group relative flex flex-col overflow-hidden rounded-xl ring-1 ring-white/8 transition-all hover:ring-white/25 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      className="group relative flex flex-col overflow-hidden rounded-xl ring-1 ring-white/8 transition-all hover:ring-white/25 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-accent"
       style={{ aspectRatio: '9 / 16' }}
       title={template.description}
     >
@@ -841,7 +841,7 @@ function TemplateGalleryCard({
 
       {/* Hover overlay */}
       <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
-        <span className="text-[11px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100 bg-indigo-500/90 px-4 py-1.5 rounded-full shadow-lg">
+        <span className="text-[11px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100 bg-accent/90 px-4 py-1.5 rounded-full shadow-lg">
           Use Template
         </span>
       </div>
@@ -1020,7 +1020,7 @@ export function HomePage() {
       {/* Sticky header */}
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/8 bg-surface-900/80 backdrop-blur-xl px-6 py-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#0d99ff] to-[#5b6abf]">
             <Sparkles size={13} className="text-white" />
           </div>
           <span className="text-sm font-semibold text-white tracking-tight">
@@ -1029,7 +1029,7 @@ export function HomePage() {
         </div>
         <button
           onClick={() => setShowNew(true)}
-          className="flex items-center gap-1.5 rounded-lg bg-indigo-500 px-3.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-400"
+          className="flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-hover"
         >
           <Plus size={13} />
           New Project

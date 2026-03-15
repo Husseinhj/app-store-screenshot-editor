@@ -28,26 +28,26 @@ export function GroupTransformPanel() {
       {/* Bounding box position & size (read-only) */}
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div>
-          <label className="mb-1 block text-[10px] text-white/40">X %</label>
-          <div className="w-full rounded-lg bg-surface-700 px-3 py-1.5 text-xs text-white/60">
+          <label className="mb-1 block text-[11px] text-white/40">X %</label>
+          <div className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white/60">
             {Math.round(bbox.x * 10) / 10}
           </div>
         </div>
         <div>
-          <label className="mb-1 block text-[10px] text-white/40">Y %</label>
-          <div className="w-full rounded-lg bg-surface-700 px-3 py-1.5 text-xs text-white/60">
+          <label className="mb-1 block text-[11px] text-white/40">Y %</label>
+          <div className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white/60">
             {Math.round(bbox.y * 10) / 10}
           </div>
         </div>
         <div>
-          <label className="mb-1 block text-[10px] text-white/40">W %</label>
-          <div className="w-full rounded-lg bg-surface-700 px-3 py-1.5 text-xs text-white/60">
+          <label className="mb-1 block text-[11px] text-white/40">W %</label>
+          <div className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white/60">
             {Math.round(bbox.width * 10) / 10}
           </div>
         </div>
         <div>
-          <label className="mb-1 block text-[10px] text-white/40">H %</label>
-          <div className="w-full rounded-lg bg-surface-700 px-3 py-1.5 text-xs text-white/60">
+          <label className="mb-1 block text-[11px] text-white/40">H %</label>
+          <div className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white/60">
             {Math.round(bbox.height * 10) / 10}
           </div>
         </div>
@@ -55,7 +55,7 @@ export function GroupTransformPanel() {
 
       {/* Flip */}
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-[10px] text-white/40">Flip</span>
+        <span className="text-[11px] text-white/40">Flip</span>
         <div className="flex gap-1">
           <button
             onClick={() => flipSelectedElements('x')}

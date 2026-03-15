@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --color-surface-900: #0a0a0a;
-  --color-surface-800: #141414;
-  --color-surface-700: #1e1e1e;
-  --color-surface-600: #282828;
-  --color-surface-500: #3a3a3a;
-  --color-accent: #6366f1;
-  --color-accent-hover: #818cf8;
+  --color-surface-900: #191919;
+  --color-surface-800: #2c2c2c;
+  --color-surface-700: #333333;
+  --color-surface-600: #3c3c3c;
+  --color-surface-500: #4a4a4a;
+  --color-accent: #0d99ff;
+  --color-accent-hover: #38b0ff;
 }
 
 * {
@@ -28,7 +28,7 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -36,21 +36,21 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3a3a3a;
-  border-radius: 3px;
+  background: #4a4a4a;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #5a5a5a;
 }
 
 .react-colorful {
   width: 100% !important;
-  height: 150px !important;
+  height: 130px !important;
 }
 
 .react-colorful__saturation {
-  border-radius: 8px 8px 0 0 !important;
+  border-radius: 6px 6px 0 0 !important;
 }
 
 .react-colorful__hue {
@@ -62,7 +62,7 @@ body {
 }
 
 .react-colorful__last-control {
-  border-radius: 0 0 8px 8px !important;
+  border-radius: 0 0 6px 6px !important;
 }
 
 /* Tiptap / ProseMirror */

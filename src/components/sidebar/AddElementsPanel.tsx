@@ -58,7 +58,7 @@ export function AddElementsPanel() {
       </div>
 
       {/* Shapes */}
-      <label className="mb-1.5 block text-[10px] text-white/40">Shapes</label>
+      <label className="mb-1.5 block text-[11px] text-white/40">Shapes</label>
       <div className="grid grid-cols-4 gap-1.5 mb-3">
         {shapes.map(({ type, icon, label }) => (
           <AddButton key={type} icon={icon} label={label} onClick={() => addShapeElement(type)} small />
@@ -66,7 +66,7 @@ export function AddElementsPanel() {
       </div>
 
       {/* Emoji */}
-      <label className="mb-1.5 block text-[10px] text-white/40">Emoji</label>
+      <label className="mb-1.5 block text-[11px] text-white/40">Emoji</label>
       <div className="grid grid-cols-6 gap-1 max-h-[140px] overflow-y-auto">
         {emojis.map((emoji) => (
           <button

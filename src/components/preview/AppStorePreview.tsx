@@ -56,7 +56,7 @@ export function AppStorePreview() {
       style={{ zIndex: 9999, backgroundColor: '#000', animation: 'fadeIn 200ms ease-out' }}
     >
       {/* ── Header ──────────────────────────────────────────── */}
-      <div className="flex items-center justify-between border-b border-white/10 bg-black/80 backdrop-blur-xl px-5 py-3">
+      <div className="flex items-center justify-between border-b border-white/[0.06] bg-black/80 backdrop-blur-xl px-5 py-3">
         <div className="flex items-center gap-3">
           <button
             onClick={closePreview}
@@ -103,7 +103,7 @@ export function AppStorePreview() {
           <div className="flex items-start gap-4 mb-8">
             {/* App icon */}
             <div
-              className="h-16 w-16 flex-shrink-0 rounded-[14px] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-2xl text-white font-bold shadow-lg"
+              className="h-16 w-16 flex-shrink-0 rounded-[14px] bg-gradient-to-br from-[#0d99ff] to-[#5b6abf] flex items-center justify-center text-2xl text-white font-bold shadow-lg"
             >
               {projectName.charAt(0).toUpperCase()}
             </div>

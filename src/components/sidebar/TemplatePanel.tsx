@@ -107,7 +107,7 @@ function TemplateCard({ template }: { template: DesignTemplate }) {
   return (
     <button
       onClick={() => applyTemplate(template.id)}
-      className="group relative flex flex-col overflow-hidden rounded-lg border border-white/10 transition-all hover:border-white/30 hover:ring-1 hover:ring-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      className="group relative flex flex-col overflow-hidden rounded-lg border border-white/[0.06] transition-all hover:border-white/20 hover:ring-1 hover:ring-white/20 focus:outline-none focus:ring-2 focus:ring-accent"
       style={{ aspectRatio: '9 / 16' }}
       title={template.description}
     >
@@ -223,7 +223,7 @@ export function TemplatePanel() {
             onClick={() => setActiveCategory(cat.value)}
             className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors ${
               activeCategory === cat.value
-                ? 'bg-indigo-500 text-white'
+                ? 'bg-accent text-white'
                 : 'bg-white/8 text-white/50 hover:bg-white/12 hover:text-white/70'
             }`}
           >

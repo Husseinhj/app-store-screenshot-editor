@@ -39,7 +39,7 @@ export function ProjectList() {
 
   return (
     <div className="flex h-full flex-col bg-surface-900">
-      <div className="border-b border-white/10 bg-surface-800 px-8 py-6">
+      <div className="border-b border-white/[0.06] bg-surface-800 px-8 py-6">
         <h1 className="text-xl font-semibold text-white">Projects</h1>
         <p className="mt-1 text-sm text-white/40">Create and manage your App Store screenshot projects</p>
       </div>

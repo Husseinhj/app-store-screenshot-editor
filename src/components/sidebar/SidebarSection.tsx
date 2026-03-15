@@ -11,10 +11,10 @@ export function SidebarSection({ title, children, defaultOpen = true }: Props) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border-b border-white/10">
+    <div className="border-b border-white/[0.06]">
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white/50 hover:text-white/70"
+        className="flex w-full items-center justify-between px-3 py-2 text-[11px] font-medium text-white/60 hover:text-white/80"
       >
         {title}
         <ChevronDown
@@ -22,7 +22,7 @@ export function SidebarSection({ title, children, defaultOpen = true }: Props) {
           className={`transition-transform ${open ? '' : '-rotate-90'}`}
         />
       </button>
-      {open && <div className="px-4 pb-3">{children}</div>}
+      {open && <div className="px-3 pb-2.5">{children}</div>}
     </div>
   );
 }

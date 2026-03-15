@@ -76,19 +76,19 @@ export function TextPanel({ element }: Props) {
   const isUnderline = editor?.isActive('underline') ?? false;
 
   const toggleBtnClass = (active: boolean) =>
-    `rounded-lg px-2 py-1.5 transition-colors ${
+    `rounded px-2 py-1.5 transition-colors ${
       active
-        ? 'bg-accent/20 text-white ring-1 ring-accent/50'
+        ? 'bg-accent/15 text-white ring-1 ring-accent/40'
         : 'bg-surface-700 text-white/50 hover:text-white'
     }`;
 
   return (
     <SidebarSection title="Text">
       {/* Rich text editor */}
-      <div className="mb-3 rounded-lg bg-surface-700 ring-1 ring-white/10 focus-within:ring-accent/50 overflow-hidden">
+      <div className="mb-3 rounded bg-surface-700 ring-0 focus-within:ring-1 focus-within:ring-accent/50 overflow-hidden">
         <EditorContent
           editor={editor}
-          className="tiptap-editor px-3 py-2 text-xs text-white min-h-[60px] max-h-[120px] overflow-auto"
+          className="tiptap-editor px-2 py-1 text-[11px] text-white min-h-[60px] max-h-[120px] overflow-auto"
         />
       </div>
 
@@ -119,7 +119,7 @@ export function TextPanel({ element }: Props) {
 
       {/* Font family + weight */}
       <div className="mb-3">
-        <label className="mb-1 block text-[10px] text-white/40">Font</label>
+        <label className="mb-1 block text-[11px] text-white/40">Font</label>
         <div className="grid grid-cols-2 gap-2">
           <select
             value={element.fontFamily}
@@ -127,7 +127,7 @@ export function TextPanel({ element }: Props) {
               updateTextElement(element.id, { fontFamily: e.target.value });
               setFontFamilyForSelection(e.target.value);
             }}
-            className="w-full rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
+            className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white outline-none ring-0 focus:ring-1 focus:ring-accent/50"
           >
             {fonts.map((f) => (
               <option key={f.family} value={f.family}>
@@ -138,7 +138,7 @@ export function TextPanel({ element }: Props) {
           <select
             value={element.fontWeight}
             onChange={(e) => updateTextElement(element.id, { fontWeight: Number(e.target.value) })}
-            className="w-full rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
+            className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white outline-none ring-0 focus:ring-1 focus:ring-accent/50"
           >
             {fontWeights.map((w) => (
               <option key={w.value} value={w.value}>
@@ -152,18 +152,18 @@ export function TextPanel({ element }: Props) {
       {/* Font size */}
       <div className="mb-3 grid grid-cols-2 gap-2">
         <div>
-          <label className="mb-1 block text-[10px] text-white/40">Base Size</label>
+          <label className="mb-1 block text-[11px] text-white/40">Base Size</label>
           <input
             type="number"
             value={element.fontSize}
             onChange={(e) => updateTextElement(element.id, { fontSize: Number(e.target.value) })}
             min={12}
             max={200}
-            className="w-full rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
+            className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white outline-none ring-0 focus:ring-1 focus:ring-accent/50"
           />
         </div>
         <div>
-          <label className="mb-1 block text-[10px] text-white/40">Selection Size</label>
+          <label className="mb-1 block text-[11px] text-white/40">Selection Size</label>
           <input
             type="number"
             placeholder="—"
@@ -173,14 +173,14 @@ export function TextPanel({ element }: Props) {
               const val = Number(e.target.value);
               if (val > 0) setFontSizeForSelection(val);
             }}
-            className="w-full rounded-lg bg-surface-700 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-accent/50"
+            className="w-full rounded bg-surface-700 px-2 py-1 text-[11px] text-white outline-none ring-0 focus:ring-1 focus:ring-accent/50"
           />
         </div>
       </div>
 
       {/* Line height */}
       <div className="mb-3">
-        <label className="mb-1 block text-[10px] text-white/40">
+        <label className="mb-1 block text-[11px] text-white/40">
           Line Height: {element.lineHeight}
         </label>
         <input
@@ -196,7 +196,7 @@ export function TextPanel({ element }: Props) {
 
       {/* Alignment */}
       <div className="mb-3">
-        <label className="mb-1 block text-[10px] text-white/40">Alignment</label>
+        <label className="mb-1 block text-[11px] text-white/40">Alignment</label>
         <div className="flex gap-1">
           {[
             { value: 'left' as const, icon: AlignLeft },
@@ -206,9 +206,9 @@ export function TextPanel({ element }: Props) {
             <button
               key={value}
               onClick={() => updateTextElement(element.id, { alignment: value })}
-              className={`flex-1 rounded-lg py-2 transition-colors ${
+              className={`flex-1 rounded py-1.5 transition-colors ${
                 element.alignment === value
-                  ? 'bg-accent/20 text-white ring-1 ring-accent/50'
+                  ? 'bg-accent/15 text-white ring-1 ring-accent/40'
                   : 'bg-surface-700 text-white/50 hover:text-white'
               }`}
             >
@@ -345,7 +345,7 @@ function TextEffectsSection({
               <div className="mt-1.5 space-y-1.5">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="mb-0.5 block text-[10px] text-white/40">Offset X</label>
+                    <label className="mb-0.5 block text-[11px] text-white/40">Offset X</label>
                     <input
                       type="range"
                       min={-20}
@@ -359,7 +359,7 @@ function TextEffectsSection({
                     <span className="text-[10px] text-white/40">{effects.shadow.offsetX}px</span>
                   </div>
                   <div>
-                    <label className="mb-0.5 block text-[10px] text-white/40">Offset Y</label>
+                    <label className="mb-0.5 block text-[11px] text-white/40">Offset Y</label>
                     <input
                       type="range"
                       min={-20}
@@ -374,7 +374,7 @@ function TextEffectsSection({
                   </div>
                 </div>
                 <div>
-                  <label className="mb-0.5 block text-[10px] text-white/40">Blur: {effects.shadow.blur}px</label>
+                  <label className="mb-0.5 block text-[11px] text-white/40">Blur: {effects.shadow.blur}px</label>
                   <input
                     type="range"
                     min={0}
@@ -408,7 +408,7 @@ function TextEffectsSection({
             {effects.glow && (
               <div className="mt-1.5 space-y-1.5">
                 <div>
-                  <label className="mb-0.5 block text-[10px] text-white/40">Blur: {effects.glow.blur}px</label>
+                  <label className="mb-0.5 block text-[11px] text-white/40">Blur: {effects.glow.blur}px</label>
                   <input
                     type="range"
                     min={0}
@@ -442,7 +442,7 @@ function TextEffectsSection({
             {effects.stroke && (
               <div className="mt-1.5 space-y-1.5">
                 <div>
-                  <label className="mb-0.5 block text-[10px] text-white/40">Width: {effects.stroke.width}px</label>
+                  <label className="mb-0.5 block text-[11px] text-white/40">Width: {effects.stroke.width}px</label>
                   <input
                     type="range"
                     min={0}
@@ -485,7 +485,7 @@ function TextEffectsSection({
             {effects.gradientFill && (
               <div className="mt-1.5 space-y-1.5">
                 <div>
-                  <label className="mb-0.5 block text-[10px] text-white/40">
+                  <label className="mb-0.5 block text-[11px] text-white/40">
                     Angle: {effects.gradientFill.angle}&deg;
                   </label>
                   <input
@@ -525,7 +525,7 @@ function TextEffectsSection({
 
           {/* Letter Spacing */}
           <div>
-            <label className="mb-0.5 block text-[10px] text-white/40">
+            <label className="mb-0.5 block text-[11px] text-white/40">
               Letter Spacing: {effects.letterSpacing ?? 0}px
             </label>
             <input
@@ -548,7 +548,7 @@ function TextEffectsSection({
 
           {/* Opacity */}
           <div>
-            <label className="mb-0.5 block text-[10px] text-white/40">
+            <label className="mb-0.5 block text-[11px] text-white/40">
               Opacity: {Math.round((effects.opacity ?? 1) * 100)}%
             </label>
             <input
@@ -586,7 +586,7 @@ function EffectToggle({
 }) {
   return (
     <div>
-      <label className="flex items-center gap-2 text-[10px] text-white/40">
+      <label className="flex items-center gap-2 text-[11px] text-white/40">
         <input
           type="checkbox"
           checked={enabled}

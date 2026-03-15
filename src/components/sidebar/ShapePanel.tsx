@@ -22,13 +22,13 @@ export function ShapePanel({ element }: Props) {
     <SidebarSection title="Shape">
       {/* Shape type selector */}
       <div className="mb-3">
-        <label className="mb-1.5 block text-[10px] text-white/40">Type</label>
-        <div className="grid grid-cols-4 gap-1 rounded-lg bg-surface-700 p-1">
+        <label className="mb-1.5 block text-[11px] text-white/40">Type</label>
+        <div className="grid grid-cols-4 gap-1 rounded bg-surface-700 p-0.5">
           {shapeTypes.map(({ type, icon, label }) => (
             <button
               key={type}
               onClick={() => updateShapeElement(element.id, { shapeType: type })}
-              className={`flex flex-col items-center gap-0.5 rounded-md py-1.5 text-[9px] font-medium transition-colors ${
+              className={`flex flex-col items-center gap-0.5 rounded py-1 text-[9px] font-medium transition-colors ${
                 element.shapeType === type
                   ? 'bg-accent text-white'
                   : 'text-white/50 hover:text-white/80'
@@ -44,7 +44,7 @@ export function ShapePanel({ element }: Props) {
       {/* Corner radius (rectangle only) */}
       {element.shapeType === 'rectangle' && (
         <div className="mb-3">
-          <label className="mb-1 block text-[10px] text-white/40">
+          <label className="mb-1 block text-[11px] text-white/40">
             Corner Radius: {element.borderRadius ?? 0}px
           </label>
           <input
@@ -79,7 +79,7 @@ export function ShapePanel({ element }: Props) {
 
       {/* Stroke width */}
       <div className="mb-3">
-        <label className="mb-1 block text-[10px] text-white/40">
+        <label className="mb-1 block text-[11px] text-white/40">
           Stroke Width: {element.strokeWidth}px
         </label>
         <input
@@ -95,7 +95,7 @@ export function ShapePanel({ element }: Props) {
 
       {/* Opacity */}
       <div className="mb-3">
-        <label className="mb-1 block text-[10px] text-white/40">
+        <label className="mb-1 block text-[11px] text-white/40">
           Opacity: {Math.round((element.opacity ?? 1) * 100)}%
         </label>
         <input
@@ -112,7 +112,7 @@ export function ShapePanel({ element }: Props) {
       {/* Backdrop blur (rectangle + circle only) */}
       {(element.shapeType === 'rectangle' || element.shapeType === 'circle') && (
         <div>
-          <label className="mb-1 block text-[10px] text-white/40">
+          <label className="mb-1 block text-[11px] text-white/40">
             Backdrop Blur: {element.blur ?? 0}px
           </label>
           <input

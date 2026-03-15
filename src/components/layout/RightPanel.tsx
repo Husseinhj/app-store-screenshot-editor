@@ -23,7 +23,7 @@ export function RightPanel({ style, onCollapse }: Props) {
 
   return (
     <div
-      className="flex shrink-0 flex-col overflow-y-auto border-l border-white/10 bg-surface-800"
+      className="flex shrink-0 flex-col overflow-y-auto border-l border-white/[0.06] bg-surface-800"
       style={style}
     >
       {onCollapse && (

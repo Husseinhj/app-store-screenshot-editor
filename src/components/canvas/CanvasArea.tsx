@@ -240,7 +240,7 @@ export function CanvasArea() {
         {canvasView === 'single' && selectedElementIds.length > 0 && (
           <button
             onClick={() => selectedElementIds.forEach((id) => removeElement(id))}
-            className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors"
           >
             Delete{selectedElementIds.length > 1 ? ` (${selectedElementIds.length})` : ''}
           </button>
@@ -314,13 +314,14 @@ function ViewButton({ icon, label, active, onClick }: { icon: React.ReactNode; l
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[10px] font-medium transition-colors ${
+      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
         active ? 'bg-accent/20 text-white ring-1 ring-accent/40' : 'text-white/40 hover:text-white/70 hover:bg-surface-700'
       }`}
     >
       {icon}
       {label}
     </button>
+
   );
 }
 
@@ -612,7 +613,7 @@ function AllPlatformsView({
         return (
           <div key={platform}>
             <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+              <h3 className="text-xs font-semibold text-white/60">
                 {platformLabels[platform]}
               </h3>
               <span className="text-[10px] text-white/30">

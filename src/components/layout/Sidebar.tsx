@@ -11,7 +11,7 @@ export function Sidebar() {
   const selectedElement = useProjectStore((s) => s.getSelectedElement());
 
   return (
-    <div className="flex w-[300px] shrink-0 flex-col overflow-y-auto border-r border-white/10 bg-surface-800">
+    <div className="flex w-[300px] shrink-0 flex-col overflow-y-auto border-r border-white/[0.06] bg-surface-800">
       <ProjectPanel />
       {selectedId && (
         <>

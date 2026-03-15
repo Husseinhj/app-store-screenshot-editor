@@ -61,7 +61,7 @@ function EditorLayout() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left panel */}
         {leftCollapsed ? (
-          <div className="flex shrink-0 flex-col items-center border-r border-white/10 bg-surface-800 w-8">
+          <div className="flex shrink-0 flex-col items-center border-r border-white/[0.06] bg-surface-800 w-8">
             <button
               onClick={toggleLeftPanel}
               className="mt-2 rounded p-1 text-white/40 hover:text-white/70 hover:bg-surface-700"
@@ -85,7 +85,7 @@ function EditorLayout() {
 
         {/* Right panel */}
         {rightCollapsed ? (
-          <div className="flex shrink-0 flex-col items-center border-l border-white/10 bg-surface-800 w-8">
+          <div className="flex shrink-0 flex-col items-center border-l border-white/[0.06] bg-surface-800 w-8">
             <button
               onClick={toggleRightPanel}
               className="mt-2 rounded p-1 text-white/40 hover:text-white/70 hover:bg-surface-700"
