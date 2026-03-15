@@ -51,15 +51,16 @@ function getScreenshotImgStyle(
 function constrainMaxHeight(def: DeviceDefinition, maxHeight: number, maxWidth?: number, orientation?: Orientation): number {
   if (!maxWidth) return maxHeight;
 
-  // Use SVG viewBox dimensions if available (more accurate for SVG rendering)
+  // Use SVG viewBox dimensions if available and valid (more accurate for SVG rendering)
   const vb = def.svgViewBox;
+  const hasValidVb = vb && vb.width > 0 && vb.height > 0;
   const isPortraitIpad = def.platform === 'ipad' && orientation === 'portrait';
 
   let deviceAspect: number;
-  if (vb && isPortraitIpad) {
+  if (hasValidVb && isPortraitIpad) {
     // Portrait iPad: SVG is landscape, rotated 90° → container is portrait (h×w)
     deviceAspect = vb.height / vb.width; // swapped
-  } else if (vb) {
+  } else if (hasValidVb) {
     deviceAspect = vb.width / vb.height;
   } else {
     const oriented = isPortraitIpad

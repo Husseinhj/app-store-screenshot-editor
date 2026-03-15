@@ -161,6 +161,8 @@ export interface Screenshot {
   elements: CanvasElement[];
   background: BackgroundConfig;
   order: number;
+  /** Element groups — groupId → array of element IDs */
+  groups?: Record<string, string[]>;
 }
 
 export interface ExportSize {

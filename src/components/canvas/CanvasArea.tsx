@@ -103,6 +103,24 @@ export function CanvasArea() {
           selectedElementIds.forEach((id) => useProjectStore.getState().duplicateElement(id));
         }
       }
+      // Group: Cmd+G / Ctrl+G
+      if ((e.metaKey || e.ctrlKey) && e.key === 'g' && !e.shiftKey && !isEditingText) {
+        const tag = (e.target as HTMLElement).tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        if (selectedElementIds.length >= 2) {
+          e.preventDefault();
+          useProjectStore.getState().groupSelectedElements();
+        }
+      }
+      // Ungroup: Cmd+Shift+G / Ctrl+Shift+G
+      if ((e.metaKey || e.ctrlKey) && e.key === 'g' && e.shiftKey && !isEditingText) {
+        const tag = (e.target as HTMLElement).tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        if (selectedElementIds.length > 0) {
+          e.preventDefault();
+          useProjectStore.getState().ungroupSelectedElements();
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);

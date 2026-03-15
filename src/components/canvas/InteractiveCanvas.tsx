@@ -11,6 +11,7 @@ import { useDragElement } from '@/hooks/useDragElement';
 import { useDragScreenshot } from '@/hooks/useDragScreenshot';
 import { useResizeElement } from '@/hooks/useResizeElement';
 import { useRotateElement } from '@/hooks/useRotateElement';
+import { useGroupTransform, computeGroupBBox } from '@/hooks/useGroupTransform';
 
 interface Props {
   screenshot: Screenshot;
@@ -225,6 +226,15 @@ export function InteractiveCanvas({ screenshot, width, height, scale }: Props) {
             multiSelect={selectedElements.length > 1}
           />
         ))}
+        {/* Group bounding box with resize + rotate handles */}
+        {selectedElements.length > 1 && (
+          <GroupSelectionOverlay
+            elements={selectedElements}
+            canvasWidth={width}
+            canvasHeight={height}
+            scale={scale}
+          />
+        )}
       </div>
     </div>
   );
@@ -390,6 +400,45 @@ function SelectedElementOverlay({
       onResizeStart={multiSelect ? undefined : handleResizeStart}
       onRotateStart={multiSelect ? undefined : handleRotateStart}
       multiSelect={multiSelect}
+    />
+  );
+}
+
+/** Group bounding box overlay with resize + rotate handles for multi-selection */
+function GroupSelectionOverlay({
+  elements,
+  canvasWidth,
+  canvasHeight,
+  scale,
+}: {
+  elements: CanvasElement[];
+  canvasWidth: number;
+  canvasHeight: number;
+  scale: number;
+}) {
+  const { handleGroupResizeStart, handleGroupRotateStart } = useGroupTransform({
+    canvasWidth,
+    canvasHeight,
+    scale,
+  });
+
+  const bbox = computeGroupBBox(elements);
+  const pixelX = (bbox.x / 100) * canvasWidth;
+  const pixelY = (bbox.y / 100) * canvasHeight;
+  const pixelW = (bbox.width / 100) * canvasWidth;
+  const pixelH = (bbox.height / 100) * canvasHeight;
+
+  return (
+    <SelectionBox
+      x={pixelX}
+      y={pixelY}
+      width={pixelW}
+      height={pixelH}
+      scale={scale}
+      rotation={0}
+      onResizeStart={handleGroupResizeStart}
+      onRotateStart={handleGroupRotateStart}
+      multiSelect={false}
     />
   );
 }

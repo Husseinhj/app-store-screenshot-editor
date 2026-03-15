@@ -204,6 +204,12 @@ interface ProjectStore {
   clearAllUserGuides: () => void;
   activeGuidelinePresetId: string | null;
 
+  // Element grouping
+  groupSelectedElements: () => void;
+  ungroupSelectedElements: () => void;
+  getGroupForElement: (elementId: string) => string | null;
+  flipSelectedElements: (axis: 'x' | 'y') => void;
+
   // Template actions
   applyTemplate: (templateId: string) => void;
 
@@ -521,6 +527,17 @@ export const useProjectStore = create<ProjectStore>()(
           const idx = s.elements.findIndex((e) => e.id === elementId);
           if (idx !== -1) s.elements.splice(idx, 1);
           state.selectedElementIds = state.selectedElementIds.filter((id) => id !== elementId);
+          // Clean up groups containing this element
+          if (s.groups) {
+            for (const [groupId, memberIds] of Object.entries(s.groups)) {
+              const filtered = memberIds.filter((id) => id !== elementId);
+              if (filtered.length < 2) {
+                delete s.groups[groupId]; // dissolve group with < 2 members
+              } else {
+                s.groups[groupId] = filtered;
+              }
+            }
+          }
         })),
 
       updateElementTransform: (elementId, transform) =>
@@ -531,15 +548,48 @@ export const useProjectStore = create<ProjectStore>()(
           if (el) Object.assign(el.transform, transform);
         })),
 
-      selectElement: (elementId) =>
-        set({ selectedElementIds: elementId ? [elementId] : [] }),
+      selectElement: (elementId) => {
+        if (!elementId) {
+          set({ selectedElementIds: [] });
+          return;
+        }
+        // Auto-select group members
+        const state = get();
+        const screenshot = getPlatformScreenshots(state.project).find(
+          (s) => s.id === state.project.selectedScreenshotId
+        );
+        const groups = screenshot?.groups ?? {};
+        for (const memberIds of Object.values(groups)) {
+          if (memberIds.includes(elementId)) {
+            set({ selectedElementIds: [...memberIds] });
+            return;
+          }
+        }
+        set({ selectedElementIds: [elementId] });
+      },
 
-      toggleSelectElement: (elementId) =>
-        set((s) => ({
-          selectedElementIds: s.selectedElementIds.includes(elementId)
-            ? s.selectedElementIds.filter((id) => id !== elementId)
-            : [...s.selectedElementIds, elementId],
-        })),
+      toggleSelectElement: (elementId) => {
+        const state = get();
+        const screenshot = getPlatformScreenshots(state.project).find(
+          (s) => s.id === state.project.selectedScreenshotId
+        );
+        const groups = screenshot?.groups ?? {};
+        // Find group members for this element (if any)
+        let idsToToggle = [elementId];
+        for (const memberIds of Object.values(groups)) {
+          if (memberIds.includes(elementId)) {
+            idsToToggle = [...memberIds];
+            break;
+          }
+        }
+        const current = state.selectedElementIds;
+        const isAlreadySelected = current.includes(elementId);
+        if (isAlreadySelected) {
+          set({ selectedElementIds: current.filter((id) => !idsToToggle.includes(id)) });
+        } else {
+          set({ selectedElementIds: [...current, ...idsToToggle.filter((id) => !current.includes(id))] });
+        }
+      },
 
       selectElements: (elementIds) =>
         set({ selectedElementIds: elementIds }),
@@ -846,6 +896,98 @@ export const useProjectStore = create<ProjectStore>()(
         state.userGuides = [];
         state.activeGuidelinePresetId = null;
       })),
+
+      // ─── Element Grouping ──────────────────────────────────────────────
+
+      groupSelectedElements: () =>
+        set(produce((state: ProjectStore) => {
+          if (state.selectedElementIds.length < 2) return;
+          const s = getPlatformScreenshots(state.project).find(
+            (sc) => sc.id === state.project.selectedScreenshotId
+          );
+          if (!s) return;
+          if (!s.groups) s.groups = {};
+          // Remove selected elements from any existing groups
+          for (const [groupId, memberIds] of Object.entries(s.groups)) {
+            const filtered = memberIds.filter((id) => !state.selectedElementIds.includes(id));
+            if (filtered.length < 2) {
+              delete s.groups[groupId];
+            } else {
+              s.groups[groupId] = filtered;
+            }
+          }
+          // Create new group
+          const groupId = nanoid();
+          s.groups[groupId] = [...state.selectedElementIds];
+        })),
+
+      ungroupSelectedElements: () =>
+        set(produce((state: ProjectStore) => {
+          const s = getPlatformScreenshots(state.project).find(
+            (sc) => sc.id === state.project.selectedScreenshotId
+          );
+          if (!s || !s.groups) return;
+          // Remove any groups that contain selected elements
+          for (const [groupId, memberIds] of Object.entries(s.groups)) {
+            if (memberIds.some((id) => state.selectedElementIds.includes(id))) {
+              delete s.groups[groupId];
+            }
+          }
+        })),
+
+      getGroupForElement: (elementId) => {
+        const state = get();
+        const screenshot = getPlatformScreenshots(state.project).find(
+          (s) => s.id === state.project.selectedScreenshotId
+        );
+        if (!screenshot?.groups) return null;
+        for (const [groupId, memberIds] of Object.entries(screenshot.groups)) {
+          if (memberIds.includes(elementId)) return groupId;
+        }
+        return null;
+      },
+
+      flipSelectedElements: (axis) =>
+        set(produce((state: ProjectStore) => {
+          const { selectedElementIds } = state;
+          if (selectedElementIds.length === 0) return;
+          const s = getPlatformScreenshots(state.project).find(
+            (sc) => sc.id === state.project.selectedScreenshotId
+          );
+          if (!s) return;
+
+          const selected = s.elements.filter((e) => selectedElementIds.includes(e.id));
+          if (selected.length === 0) return;
+
+          if (selected.length === 1) {
+            // Single element: just toggle flip
+            const el = selected[0];
+            if (axis === 'x') el.flipX = !el.flipX;
+            else el.flipY = !el.flipY;
+            return;
+          }
+
+          // Multi-element: mirror positions across group bounding box center
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          for (const el of selected) {
+            minX = Math.min(minX, el.transform.x);
+            minY = Math.min(minY, el.transform.y);
+            maxX = Math.max(maxX, el.transform.x + el.transform.width);
+            maxY = Math.max(maxY, el.transform.y + el.transform.height);
+          }
+
+          for (const el of selected) {
+            if (axis === 'x') {
+              el.flipX = !el.flipX;
+              // Mirror x position: newX = bboxLeft + bboxRight - x - width
+              el.transform.x = minX + maxX - el.transform.x - el.transform.width;
+            } else {
+              el.flipY = !el.flipY;
+              // Mirror y position: newY = bboxTop + bboxBottom - y - height
+              el.transform.y = minY + maxY - el.transform.y - el.transform.height;
+            }
+          }
+        })),
 
       // ─── Template ────────────────────────────────────────────────────
 

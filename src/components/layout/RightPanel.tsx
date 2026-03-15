@@ -1,5 +1,6 @@
 import { useProjectStore } from '@/store/useProjectStore';
 import { TransformPanel } from '../sidebar/TransformPanel';
+import { GroupTransformPanel } from '../sidebar/GroupTransformPanel';
 import { TextPanel } from '../sidebar/TextPanel';
 import { DevicePanel } from '../sidebar/DevicePanel';
 import { ImageElementPanel } from '../sidebar/ImageElementPanel';
@@ -55,7 +56,7 @@ export function RightPanel({ style, onCollapse }: Props) {
 
       {selectedElementIds.length > 0 && <AlignPanel />}
 
-      {selectedElement && (
+      {selectedElement && selectedElementIds.length === 1 && (
         <>
           <TransformPanel element={selectedElement} />
           {selectedElement.type === 'text' && (
@@ -72,6 +73,8 @@ export function RightPanel({ style, onCollapse }: Props) {
           )}
         </>
       )}
+
+      {selectedElementIds.length > 1 && <GroupTransformPanel />}
     </div>
   );
 }
