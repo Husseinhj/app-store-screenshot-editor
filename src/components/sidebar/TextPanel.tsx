@@ -245,7 +245,7 @@ export function TextPanel({ element }: Props) {
 // ─── Text Style Presets Sub-Section ────────────────────────────────────────
 
 function TextStylePresetsSection({ element }: { element: TextElement }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const applyTextStylePreset = useProjectStore((s) => s.applyTextStylePreset);
 
   return (
