@@ -179,6 +179,9 @@ export function useDragElement({ elementId, canvasWidth, canvasHeight, scale, on
       isDragging.current = false;
       onDragStart?.();
 
+      // Prevent browser text selection during drag
+      document.body.classList.add('canvas-no-select');
+
       const handleMouseMove = (ev: MouseEvent) => {
         const dx = ev.clientX - startX;
         const dy = ev.clientY - startY;
@@ -222,6 +225,7 @@ export function useDragElement({ elementId, canvasWidth, canvasHeight, scale, on
 
       const handleMouseUp = () => {
         cancelAnimationFrame(rafRef.current);
+        document.body.classList.remove('canvas-no-select');
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
         useProjectStore.getState().setSnapGuides([]);

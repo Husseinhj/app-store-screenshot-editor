@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { SidebarSection } from './SidebarSection';
 import { designTemplates, type DesignTemplate, type TemplateCategory } from '@/lib/templates';
 import { useProjectStore } from '@/store/useProjectStore';
+import { getTextEffectStyles } from '@/lib/textEffects';
 
 const categories: { label: string; value: TemplateCategory | 'all' }[] = [
   { label: 'All', value: 'all' },
@@ -25,9 +26,28 @@ function TemplateCard({ template }: { template: DesignTemplate }) {
     bgStyle.background = `linear-gradient(${angle}deg, ${stopStr})`;
   }
 
-  // Find first text element to get headline color
+  // Find text elements for preview
   const headlineSpec = template.elements.find((e) => e.type === 'text');
+  const subtitleSpec = template.elements.filter((e) => e.type === 'text')[1];
   const textColor = headlineSpec?.text?.color ?? '#ffffff';
+  const textEffects = headlineSpec?.text?.effects;
+
+  // Find shape elements for decoration preview
+  const shapes = template.elements.filter((e) => e.type === 'shape');
+
+  // Find device element for preview
+  const deviceSpec = template.elements.find((e) => e.type === 'device-frame');
+
+  // Build headline style with effects
+  const headlineStyle: React.CSSProperties = {
+    color: textColor,
+    fontFamily: headlineSpec?.text?.fontFamily ?? 'Inter',
+    fontWeight: headlineSpec?.text?.fontWeight ?? 700,
+    fontSize: 9,
+    lineHeight: 1.1,
+    maxWidth: '90%',
+    ...getTextEffectStyles(textEffects),
+  };
 
   return (
     <button
@@ -39,30 +59,101 @@ function TemplateCard({ template }: { template: DesignTemplate }) {
       {/* Background preview */}
       <div className="absolute inset-0" style={bgStyle} />
 
+      {/* Decorative shapes */}
+      {shapes.map((shape, i) => {
+        const fill = shape.shape?.fillColor ?? 'rgba(255,255,255,0.1)';
+        const borderRadius = shape.shape?.shapeType === 'circle'
+          ? '50%'
+          : shape.shape?.borderRadius
+            ? `${Math.min(shape.shape.borderRadius, 20)}px`
+            : '4px';
+        return (
+          <div
+            key={i}
+            className="absolute"
+            style={{
+              left: `${shape.transform.x}%`,
+              top: `${shape.transform.y}%`,
+              width: `${shape.transform.width}%`,
+              height: `${shape.transform.height}%`,
+              backgroundColor: fill,
+              borderRadius,
+              border: shape.shape?.strokeWidth
+                ? `1px solid ${shape.shape.strokeColor}`
+                : undefined,
+              opacity: 0.7,
+              transform: shape.transform.rotation ? `rotate(${shape.transform.rotation}deg)` : undefined,
+            }}
+          />
+        );
+      })}
+
       {/* Content preview */}
       <div className="relative flex h-full w-full flex-col items-center justify-between p-2">
         {/* Mini headline area */}
-        <div className="mt-3 w-full text-center">
+        <div
+          className="mt-2 w-full"
+          style={{
+            textAlign: headlineSpec?.text?.alignment ?? 'center',
+          }}
+        >
           <div
-            className="mx-auto truncate text-[7px] font-bold leading-tight"
-            style={{ color: textColor, maxWidth: '90%' }}
+            className="mx-auto truncate leading-tight"
+            style={headlineStyle}
           >
             {template.name}
           </div>
+          {subtitleSpec && (
+            <div
+              className="mx-auto mt-0.5 truncate"
+              style={{
+                color: subtitleSpec.text?.color ?? textColor,
+                fontFamily: subtitleSpec.text?.fontFamily ?? 'Inter',
+                fontWeight: subtitleSpec.text?.fontWeight ?? 400,
+                fontSize: 5,
+                lineHeight: 1.2,
+                maxWidth: '90%',
+                opacity: 0.7,
+                ...getTextEffectStyles(subtitleSpec.text?.effects),
+              }}
+            >
+              Subtitle
+            </div>
+          )}
         </div>
 
         {/* Device placeholder */}
-        <div className="mb-2 flex flex-1 items-center justify-center w-full">
+        {deviceSpec && (
           <div
-            className="rounded-md bg-white/15"
-            style={{ width: '55%', height: '65%' }}
-          />
-        </div>
+            className="flex items-center justify-center"
+            style={{
+              position: 'absolute',
+              left: `${deviceSpec.transform.x}%`,
+              top: `${deviceSpec.transform.y}%`,
+              width: `${deviceSpec.transform.width}%`,
+              height: `${deviceSpec.transform.height}%`,
+              transform: deviceSpec.transform.rotation ? `rotate(${deviceSpec.transform.rotation}deg)` : undefined,
+            }}
+          >
+            <div
+              className="w-full h-full rounded-[3px] border border-white/20"
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              }}
+            >
+              {/* Screen content mock */}
+              <div className="w-full h-full rounded-[2px] overflow-hidden p-[2px]">
+                <div className="w-full h-full rounded-[1px] bg-gradient-to-b from-white/5 to-white/2" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Hover overlay */}
-      <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
-        <span className="text-[9px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/30">
+        <span className="text-[9px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm">
           Apply
         </span>
       </div>

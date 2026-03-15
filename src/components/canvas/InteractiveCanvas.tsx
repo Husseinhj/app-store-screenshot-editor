@@ -55,6 +55,9 @@ export function InteractiveCanvas({ screenshot, width, height, scale }: Props) {
 
       marqueeStartRef.current = { clientX: e.clientX, clientY: e.clientY };
 
+      // Prevent browser text selection during marquee drag
+      document.body.classList.add('canvas-no-select');
+
       // Don't clear selection yet — only clear if it's a simple click (no drag)
       const handleMouseMove = (ev: MouseEvent) => {
         const currentX = (ev.clientX - rect.left) / scale;
@@ -68,6 +71,7 @@ export function InteractiveCanvas({ screenshot, width, height, scale }: Props) {
       };
 
       const handleMouseUp = (ev: MouseEvent) => {
+        document.body.classList.remove('canvas-no-select');
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
 

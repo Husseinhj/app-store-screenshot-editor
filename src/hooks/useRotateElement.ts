@@ -41,6 +41,9 @@ export function useRotateElement({ elementId, centerPixelX, centerPixelY, scale 
       const startAngle = Math.atan2(e.clientY - screenCenterY, e.clientX - screenCenterX);
       const startRotation = el.transform.rotation || 0;
 
+      // Prevent browser text selection during rotate
+      document.body.classList.add('canvas-no-select');
+
       const handleMouseMove = (ev: MouseEvent) => {
         const currentAngle = Math.atan2(ev.clientY - screenCenterY, ev.clientX - screenCenterX);
         let deltaDeg = ((currentAngle - startAngle) * 180) / Math.PI;
@@ -62,6 +65,7 @@ export function useRotateElement({ elementId, centerPixelX, centerPixelY, scale 
 
       const handleMouseUp = () => {
         cancelAnimationFrame(rafRef.current);
+        document.body.classList.remove('canvas-no-select');
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
       };

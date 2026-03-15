@@ -88,3 +88,10 @@ body {
 .inline-tiptap-editor .ProseMirror p {
   margin: 0;
 }
+
+/* Prevent browser text selection on the canvas during drag/resize/rotate */
+.canvas-no-select,
+.canvas-no-select * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}

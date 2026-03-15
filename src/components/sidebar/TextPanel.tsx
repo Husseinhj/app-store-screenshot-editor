@@ -13,6 +13,8 @@ import FontFamily from '@tiptap/extension-font-family';
 import TextAlign from '@tiptap/extension-text-align';
 import UnderlineExt from '@tiptap/extension-underline';
 import { FontSize } from '@/lib/tiptap-font-size';
+import { textStylePresets } from '@/lib/textStylePresets';
+import { getTextEffectStyles } from '@/lib/textEffects';
 
 interface Props {
   element: TextElement;
@@ -231,9 +233,67 @@ export function TextPanel({ element }: Props) {
         />
       </div>
 
+      {/* ─── Style Presets ─────────────────────────────────────────────── */}
+      <TextStylePresetsSection element={element} />
+
       {/* ─── Effects ─────────────────────────────────────────────────── */}
       <TextEffectsSection element={element} updateTextElement={updateTextElement} />
     </SidebarSection>
+  );
+}
+
+// ─── Text Style Presets Sub-Section ────────────────────────────────────────
+
+function TextStylePresetsSection({ element }: { element: TextElement }) {
+  const [expanded, setExpanded] = useState(false);
+  const applyTextStylePreset = useProjectStore((s) => s.applyTextStylePreset);
+
+  return (
+    <div className="mt-3 border-t border-white/5 pt-3">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center gap-1 text-[11px] font-medium text-white/60 hover:text-white/80"
+      >
+        {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+        Style Presets
+      </button>
+
+      {expanded && (
+        <div className="mt-2 grid grid-cols-2 gap-1.5">
+          {textStylePresets.map((preset) => {
+            const previewStyle: React.CSSProperties = {
+              fontFamily: `${preset.fontFamily}, sans-serif`,
+              fontWeight: preset.fontWeight,
+              color: preset.color,
+              fontSize: 11,
+              lineHeight: 1.2,
+              letterSpacing: preset.letterSpacing ? `${preset.letterSpacing * 0.3}px` : undefined,
+              ...getTextEffectStyles(preset.effects),
+            };
+
+            // Need a dark or light bg depending on the text color
+            const isLightText = preset.color === '#ffffff' || preset.color === '#00ffff' || preset.color === '#FFE600' || preset.color === '#F4C542';
+            const bgClass = isLightText ? 'bg-surface-900' : 'bg-white/10';
+
+            return (
+              <button
+                key={preset.id}
+                onClick={() => applyTextStylePreset(element.id, preset.id)}
+                className={`group relative flex flex-col items-center justify-center rounded-md ${bgClass} px-1.5 py-2 transition-all hover:ring-1 hover:ring-accent/50`}
+                title={preset.name}
+              >
+                <span className="truncate w-full text-center" style={previewStyle}>
+                  Aa
+                </span>
+                <span className="mt-0.5 text-[8px] text-white/30 truncate w-full text-center">
+                  {preset.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 

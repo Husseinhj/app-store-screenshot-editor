@@ -43,6 +43,9 @@ export function useResizeElement({ elementId, canvasWidth, canvasHeight, scale }
       const cosR = Math.cos(rotationRad);
       const sinR = Math.sin(rotationRad);
 
+      // Prevent browser text selection during resize
+      document.body.classList.add('canvas-no-select');
+
       const handleMouseMove = (ev: MouseEvent) => {
         const rawDx = ((ev.clientX - startX) / scale / canvasWidth) * 100;
         const rawDy = ((ev.clientY - startY) / scale / canvasHeight) * 100;
@@ -91,6 +94,7 @@ export function useResizeElement({ elementId, canvasWidth, canvasHeight, scale }
 
       const handleMouseUp = () => {
         cancelAnimationFrame(rafRef.current);
+        document.body.classList.remove('canvas-no-select');
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
       };

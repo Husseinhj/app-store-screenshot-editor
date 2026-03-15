@@ -35,6 +35,9 @@ export function useDragScreenshot({ elementId, scale }: UseDragScreenshotOptions
       const startY = e.clientY;
       const startOffset = { ...el.screenshotOffset };
 
+      // Prevent browser text selection during drag
+      document.body.classList.add('canvas-no-select');
+
       const handleMouseMove = (ev: MouseEvent) => {
         const dx = (ev.clientX - startX) / scale;
         const dy = (ev.clientY - startY) / scale;
@@ -52,6 +55,7 @@ export function useDragScreenshot({ elementId, scale }: UseDragScreenshotOptions
 
       const handleMouseUp = () => {
         cancelAnimationFrame(rafRef.current);
+        document.body.classList.remove('canvas-no-select');
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
       };
