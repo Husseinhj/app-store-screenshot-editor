@@ -145,6 +145,8 @@ export function createDefaultShapeElement(
     strokeColor: '#000000',
     strokeWidth: 0,
     borderRadius: 0,
+    opacity: 1,
+    blur: 0,
   };
 }
 

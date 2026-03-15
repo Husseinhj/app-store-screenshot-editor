@@ -938,6 +938,8 @@ export const useProjectStore = create<ProjectStore>()(
                 strokeColor: spec.shape.strokeColor,
                 strokeWidth: spec.shape.strokeWidth,
                 borderRadius: spec.shape.borderRadius,
+                opacity: spec.shape.opacity ?? 1,
+                blur: spec.shape.blur ?? 0,
               };
               return el;
             }

@@ -146,6 +146,8 @@ export interface ShapeElement extends BaseElement {
   strokeColor: string;
   strokeWidth: number;
   borderRadius: number;
+  opacity?: number;      // 0-1, default 1
+  blur?: number;         // 0-50 backdrop blur px, default 0
 }
 
 export type CanvasElement = DeviceFrameElement | TextElement | ImageElement | ShapeElement;

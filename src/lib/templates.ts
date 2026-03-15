@@ -27,10 +27,12 @@ export interface TemplateElementSpec {
     strokeColor: string;
     strokeWidth: number;
     borderRadius: number;
+    opacity?: number;
+    blur?: number;
   };
 }
 
-export type TemplateCategory = 'bold' | 'minimal' | 'editorial' | 'playful' | 'dark';
+export type TemplateCategory = 'bold' | 'minimal' | 'editorial' | 'playful' | 'dark' | 'connected';
 
 /**
  * Per-element transform overrides for non-iPhone platforms.
@@ -47,6 +49,8 @@ export interface DesignTemplate {
   elements: TemplateElementSpec[];
   /** Platform-specific element transform overrides (iPad, Mac, Watch). iPhone uses defaults. */
   platformOverrides?: Partial<Record<Platform, PlatformTransformOverrides>>;
+  /** ID of a companion template designed to work alongside this one in adjacent screens. */
+  pairedWith?: string;
 }
 
 /**
@@ -460,7 +464,7 @@ export const designTemplates: DesignTemplate[] = [
         type: 'shape',
         transform: { x: 10, y: 3, width: 80, height: 22, rotation: 0 },
         zIndex: 0,
-        shape: { shapeType: 'rectangle', fillColor: 'rgba(255,255,255,0.15)', strokeColor: 'rgba(255,255,255,0.2)', strokeWidth: 1, borderRadius: 20 },
+        shape: { shapeType: 'rectangle', fillColor: 'rgba(255,255,255,0.15)', strokeColor: 'rgba(255,255,255,0.2)', strokeWidth: 1, borderRadius: 20, blur: 12, opacity: 0.9 },
       },
       {
         type: 'text',
@@ -764,5 +768,250 @@ export const designTemplates: DesignTemplate[] = [
       mac:            { 0: { x: -5, y: -10, width: 35, height: 55 }, 1: { x: 75, y: 50, width: 30, height: 48 }, 2: { x: 5, y: 15, width: 35 }, 3: { x: 5, y: 32, width: 35 }, 4: { x: 45, y: 5, width: 52, height: 90 } },
       'apple-watch':  { 0: { width: 45, height: 55 }, 1: { width: 35, height: 45 }, 2: { y: 5 }, 3: { y: 18 }, 4: { x: 18, y: 30, width: 64, height: 60 } },
     },
+  },
+
+  // ─── Connected / Split-Screen Templates ──────────────────────────────────────
+
+  {
+    id: 'splitViewLeft',
+    name: 'Split View (Left)',
+    description: 'Device extends right — pair with Split View (Right) on next screen',
+    category: 'connected',
+    pairedWith: 'splitViewRight',
+    background: {
+      type: 'gradient',
+      solidColor: '#0f172a',
+      gradient: {
+        angle: 135,
+        stops: [
+          { color: '#0f172a', position: 0 },
+          { color: '#1e3a5f', position: 50 },
+          { color: '#0f172a', position: 100 },
+        ],
+      },
+      imageUrl: null,
+    },
+    elements: [
+      // Glass blur text box on the left
+      {
+        type: 'shape',
+        transform: { x: 4, y: 4, width: 42, height: 26, rotation: 0 },
+        zIndex: 0,
+        shape: { shapeType: 'rectangle', fillColor: 'rgba(255,255,255,0.08)', strokeColor: 'rgba(255,255,255,0.15)', strokeWidth: 1, borderRadius: 16, blur: 14, opacity: 0.95 },
+      },
+      {
+        type: 'text',
+        transform: { x: 7, y: 7, width: 36, height: 10, rotation: 0 },
+        zIndex: 1,
+        text: {
+          content: '<p>Your headline here</p>',
+          fontFamily: 'Inter',
+          fontSize: 48,
+          fontWeight: 800,
+          color: '#ffffff',
+          alignment: 'left',
+          lineHeight: 1.15,
+        },
+      },
+      {
+        type: 'text',
+        transform: { x: 7, y: 17, width: 36, height: 5, rotation: 0 },
+        zIndex: 2,
+        text: {
+          content: '<p>Subtitle text goes here</p>',
+          fontFamily: 'Inter',
+          fontSize: 22,
+          fontWeight: 400,
+          color: 'rgba(255,255,255,0.6)',
+          alignment: 'left',
+          lineHeight: 1.3,
+        },
+      },
+      // Device frame extending past right edge
+      {
+        type: 'device-frame',
+        transform: { x: 38, y: 18, width: 72, height: 80, rotation: 0 },
+        zIndex: 3,
+        device: { device: 'auto', showDeviceFrame: true },
+      },
+    ],
+  },
+  {
+    id: 'splitViewRight',
+    name: 'Split View (Right)',
+    description: 'Device extends left — pair with Split View (Left) on previous screen',
+    category: 'connected',
+    pairedWith: 'splitViewLeft',
+    background: {
+      type: 'gradient',
+      solidColor: '#0f172a',
+      gradient: {
+        angle: 135,
+        stops: [
+          { color: '#0f172a', position: 0 },
+          { color: '#1e3a5f', position: 50 },
+          { color: '#0f172a', position: 100 },
+        ],
+      },
+      imageUrl: null,
+    },
+    elements: [
+      // Device frame extending past left edge
+      {
+        type: 'device-frame',
+        transform: { x: -10, y: 18, width: 72, height: 80, rotation: 0 },
+        zIndex: 0,
+        device: { device: 'auto', showDeviceFrame: true },
+      },
+      // Glass blur text box on the right
+      {
+        type: 'shape',
+        transform: { x: 54, y: 4, width: 42, height: 26, rotation: 0 },
+        zIndex: 1,
+        shape: { shapeType: 'rectangle', fillColor: 'rgba(255,255,255,0.08)', strokeColor: 'rgba(255,255,255,0.15)', strokeWidth: 1, borderRadius: 16, blur: 14, opacity: 0.95 },
+      },
+      {
+        type: 'text',
+        transform: { x: 57, y: 7, width: 36, height: 10, rotation: 0 },
+        zIndex: 2,
+        text: {
+          content: '<p>Your headline here</p>',
+          fontFamily: 'Inter',
+          fontSize: 48,
+          fontWeight: 800,
+          color: '#ffffff',
+          alignment: 'left',
+          lineHeight: 1.15,
+        },
+      },
+      {
+        type: 'text',
+        transform: { x: 57, y: 17, width: 36, height: 5, rotation: 0 },
+        zIndex: 3,
+        text: {
+          content: '<p>Subtitle text goes here</p>',
+          fontFamily: 'Inter',
+          fontSize: 22,
+          fontWeight: 400,
+          color: 'rgba(255,255,255,0.6)',
+          alignment: 'left',
+          lineHeight: 1.3,
+        },
+      },
+    ],
+  },
+  {
+    id: 'darkLightLeft',
+    name: 'Dark / Light (Left)',
+    description: 'Dark mode screen — pair with Dark / Light (Right) for light mode',
+    category: 'connected',
+    pairedWith: 'darkLightRight',
+    background: {
+      type: 'solid',
+      solidColor: '#0a0a0a',
+      gradient: { angle: 0, stops: [{ color: '#0a0a0a', position: 0 }, { color: '#0a0a0a', position: 100 }] },
+      imageUrl: null,
+    },
+    elements: [
+      // Glass accent shape
+      {
+        type: 'shape',
+        transform: { x: 3, y: 65, width: 35, height: 18, rotation: 0 },
+        zIndex: 0,
+        shape: { shapeType: 'rectangle', fillColor: 'rgba(255,255,255,0.05)', strokeColor: 'rgba(255,255,255,0.08)', strokeWidth: 1, borderRadius: 14, blur: 10, opacity: 0.9 },
+      },
+      {
+        type: 'text',
+        transform: { x: 5, y: 5, width: 40, height: 10, rotation: 0 },
+        zIndex: 1,
+        text: {
+          content: '<p>Dark Mode</p>',
+          fontFamily: 'Inter',
+          fontSize: 52,
+          fontWeight: 800,
+          color: '#ffffff',
+          alignment: 'left',
+          lineHeight: 1.15,
+        },
+      },
+      {
+        type: 'text',
+        transform: { x: 5, y: 14, width: 40, height: 5, rotation: 0 },
+        zIndex: 2,
+        text: {
+          content: '<p>Easy on the eyes</p>',
+          fontFamily: 'Inter',
+          fontSize: 22,
+          fontWeight: 400,
+          color: 'rgba(255,255,255,0.5)',
+          alignment: 'left',
+          lineHeight: 1.3,
+        },
+      },
+      // Device extending past right edge
+      {
+        type: 'device-frame',
+        transform: { x: 32, y: 12, width: 78, height: 86, rotation: 0 },
+        zIndex: 3,
+        device: { device: 'auto', showDeviceFrame: true },
+      },
+    ],
+  },
+  {
+    id: 'darkLightRight',
+    name: 'Dark / Light (Right)',
+    description: 'Light mode screen — pair with Dark / Light (Left) for dark mode',
+    category: 'connected',
+    pairedWith: 'darkLightLeft',
+    background: {
+      type: 'solid',
+      solidColor: '#f5f5f5',
+      gradient: { angle: 0, stops: [{ color: '#f5f5f5', position: 0 }, { color: '#f5f5f5', position: 100 }] },
+      imageUrl: null,
+    },
+    elements: [
+      // Device extending past left edge
+      {
+        type: 'device-frame',
+        transform: { x: -10, y: 12, width: 78, height: 86, rotation: 0 },
+        zIndex: 0,
+        device: { device: 'auto', showDeviceFrame: true },
+      },
+      // Glass accent shape
+      {
+        type: 'shape',
+        transform: { x: 62, y: 65, width: 35, height: 18, rotation: 0 },
+        zIndex: 1,
+        shape: { shapeType: 'rectangle', fillColor: 'rgba(0,0,0,0.04)', strokeColor: 'rgba(0,0,0,0.08)', strokeWidth: 1, borderRadius: 14, blur: 10, opacity: 0.9 },
+      },
+      {
+        type: 'text',
+        transform: { x: 55, y: 5, width: 40, height: 10, rotation: 0 },
+        zIndex: 2,
+        text: {
+          content: '<p>Light Mode</p>',
+          fontFamily: 'Inter',
+          fontSize: 52,
+          fontWeight: 800,
+          color: '#1a1a1a',
+          alignment: 'right',
+          lineHeight: 1.15,
+        },
+      },
+      {
+        type: 'text',
+        transform: { x: 55, y: 14, width: 40, height: 5, rotation: 0 },
+        zIndex: 3,
+        text: {
+          content: '<p>Clean and bright</p>',
+          fontFamily: 'Inter',
+          fontSize: 22,
+          fontWeight: 400,
+          color: 'rgba(0,0,0,0.4)',
+          alignment: 'right',
+          lineHeight: 1.3,
+        },
+      },
+    ],
   },
 ];

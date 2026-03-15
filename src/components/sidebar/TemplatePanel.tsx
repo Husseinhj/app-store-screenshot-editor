@@ -11,6 +11,7 @@ const categories: { label: string; value: TemplateCategory | 'all' }[] = [
   { label: 'Editorial', value: 'editorial' },
   { label: 'Playful', value: 'playful' },
   { label: 'Dark', value: 'dark' },
+  { label: 'Connected', value: 'connected' },
 ];
 
 function TemplateCard({ template }: { template: DesignTemplate }) {
@@ -81,7 +82,9 @@ function TemplateCard({ template }: { template: DesignTemplate }) {
               border: shape.shape?.strokeWidth
                 ? `1px solid ${shape.shape.strokeColor}`
                 : undefined,
-              opacity: 0.7,
+              opacity: shape.shape?.opacity ?? 0.7,
+              backdropFilter: shape.shape?.blur ? `blur(${Math.min(shape.shape.blur, 4)}px)` : undefined,
+              WebkitBackdropFilter: shape.shape?.blur ? `blur(${Math.min(shape.shape.blur, 4)}px)` : undefined,
               transform: shape.transform.rotation ? `rotate(${shape.transform.rotation}deg)` : undefined,
             }}
           />
@@ -150,6 +153,13 @@ function TemplateCard({ template }: { template: DesignTemplate }) {
           </div>
         )}
       </div>
+
+      {/* Paired template badge */}
+      {template.pairedWith && (
+        <div className="absolute top-1.5 right-1.5 z-10 rounded-full bg-black/30 backdrop-blur-sm px-1.5 py-0.5 text-[7px] text-white/50 ring-1 ring-white/10">
+          Paired
+        </div>
+      )}
 
       {/* Hover overlay */}
       <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/30">

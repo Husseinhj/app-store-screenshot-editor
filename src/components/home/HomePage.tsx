@@ -653,6 +653,7 @@ function TemplateGallerySection({
     { label: 'Editorial', value: 'editorial' },
     { label: 'Playful', value: 'playful' },
     { label: 'Dark', value: 'dark' },
+    { label: 'Connected', value: 'connected' },
   ];
 
   const filtered =

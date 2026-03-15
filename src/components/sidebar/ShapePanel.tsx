@@ -78,7 +78,7 @@ export function ShapePanel({ element }: Props) {
       </div>
 
       {/* Stroke width */}
-      <div>
+      <div className="mb-3">
         <label className="mb-1 block text-[10px] text-white/40">
           Stroke Width: {element.strokeWidth}px
         </label>
@@ -92,6 +92,43 @@ export function ShapePanel({ element }: Props) {
           className="w-full accent-accent"
         />
       </div>
+
+      {/* Opacity */}
+      <div className="mb-3">
+        <label className="mb-1 block text-[10px] text-white/40">
+          Opacity: {Math.round((element.opacity ?? 1) * 100)}%
+        </label>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={Math.round((element.opacity ?? 1) * 100)}
+          onChange={(e) => updateShapeElement(element.id, { opacity: Number(e.target.value) / 100 })}
+          className="w-full accent-accent"
+        />
+      </div>
+
+      {/* Backdrop blur (rectangle + circle only) */}
+      {(element.shapeType === 'rectangle' || element.shapeType === 'circle') && (
+        <div>
+          <label className="mb-1 block text-[10px] text-white/40">
+            Backdrop Blur: {element.blur ?? 0}px
+          </label>
+          <input
+            type="range"
+            min={0}
+            max={50}
+            step={1}
+            value={element.blur ?? 0}
+            onChange={(e) => updateShapeElement(element.id, { blur: Number(e.target.value) })}
+            className="w-full accent-accent"
+          />
+          {(element.blur ?? 0) > 0 && (
+            <p className="mt-1 text-[9px] text-white/25">Glass effect — blurs content behind the shape</p>
+          )}
+        </div>
+      )}
     </SidebarSection>
   );
 }
