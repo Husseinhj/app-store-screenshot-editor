@@ -74,6 +74,8 @@ export function LayerPanel() {
   const reorderElementZIndices = useProjectStore((s) => s.reorderElementZIndices);
   const groupSelectedElements = useProjectStore((s) => s.groupSelectedElements);
   const ungroupSelectedElements = useProjectStore((s) => s.ungroupSelectedElements);
+  const editingGroupId = useProjectStore((s) => s.editingGroupId);
+  const enterGroup = useProjectStore((s) => s.enterGroup);
 
   const screenshots = project.screenshotsByPlatform[project.platform] ?? [];
   const selectedScreenshot = screenshots.find((s) => s.id === project.selectedScreenshotId);
@@ -352,8 +354,16 @@ export function LayerPanel() {
                   onDragOver={(e) => handleDragOverGroup(e, item.groupId)}
                   onDrop={handleDrop}
                   onDragEnd={handleDragEnd}
-                  className={`group/hdr flex items-center gap-1 rounded-lg px-1 py-1 cursor-pointer hover:bg-surface-700 transition-colors ${isGroupDragged ? 'opacity-40' : ''}`}
+                  className={`group/hdr flex items-center gap-1 rounded-lg px-1 py-1 cursor-pointer hover:bg-surface-700 transition-colors ${isGroupDragged ? 'opacity-40' : ''} ${editingGroupId === item.groupId ? 'ring-1 ring-indigo-500/40' : ''}`}
                   onClick={() => selectGroupMembers(item.groupId)}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    enterGroup(item.groupId);
+                    // Select first member individually
+                    if (memberIds.length > 0) {
+                      selectElement(memberIds[0]);
+                    }
+                  }}
                 >
                   {/* Drag handle */}
                   <span className="shrink-0 cursor-grab text-white/20 group-hover/hdr:text-white/40">
@@ -426,6 +436,14 @@ export function LayerPanel() {
                   if (e.shiftKey) {
                     toggleSelectElement(element.id);
                   } else {
+                    selectElement(element.id);
+                  }
+                }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  if (groupId && editingGroupId !== groupId) {
+                    // Double-click member row → enter group, select this element
+                    enterGroup(groupId);
                     selectElement(element.id);
                   }
                 }}

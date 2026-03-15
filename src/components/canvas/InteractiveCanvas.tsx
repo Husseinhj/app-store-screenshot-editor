@@ -27,6 +27,9 @@ export function InteractiveCanvas({ screenshot, width, height, scale }: Props) {
   const selectElements = useProjectStore((s) => s.selectElements);
   const editingTextElementId = useProjectStore((s) => s.editingTextElementId);
   const setEditingTextElement = useProjectStore((s) => s.setEditingTextElement);
+  const editingGroupId = useProjectStore((s) => s.editingGroupId);
+  const enterGroup = useProjectStore((s) => s.enterGroup);
+  const exitGroup = useProjectStore((s) => s.exitGroup);
 
   const sortedElements = [...screenshot.elements]
     .filter((el) => el.visible)
@@ -156,6 +159,7 @@ export function InteractiveCanvas({ screenshot, width, height, scale }: Props) {
             canvasHeight={height}
             scale={scale}
             isSelected={selectedElementIds.includes(el.id)}
+            screenshot={screenshot}
           >
             <CanvasElementRenderer
               element={el}
@@ -213,6 +217,33 @@ export function InteractiveCanvas({ screenshot, width, height, scale }: Props) {
 
       {/* Selection overlay — NOT clipped, so handles extend beyond canvas */}
       <div style={{ position: 'absolute', inset: 0, overflow: 'visible', pointerEvents: 'none' }}>
+        {/* When editing a group, show dashed border around entire group */}
+        {editingGroupId && (() => {
+          const groupMembers = screenshot.elements.filter(
+            (el) => (screenshot.groups?.[editingGroupId] ?? []).includes(el.id)
+          );
+          if (groupMembers.length === 0) return null;
+          const bbox = computeGroupBBox(groupMembers);
+          const px = (bbox.x / 100) * width;
+          const py = (bbox.y / 100) * height;
+          const pw = (bbox.width / 100) * width;
+          const ph = (bbox.height / 100) * height;
+          return (
+            <div
+              style={{
+                position: 'absolute',
+                left: px,
+                top: py,
+                width: pw,
+                height: ph,
+                border: '1.5px dashed rgba(99, 102, 241, 0.4)',
+                borderRadius: 4,
+                pointerEvents: 'none',
+              }}
+            />
+          );
+        })()}
+
         {selectedElements.map((el) => (
           <SelectedElementOverlay
             key={el.id}
@@ -226,8 +257,8 @@ export function InteractiveCanvas({ screenshot, width, height, scale }: Props) {
             multiSelect={selectedElements.length > 1}
           />
         ))}
-        {/* Group bounding box with resize + rotate handles */}
-        {selectedElements.length > 1 && (
+        {/* Group bounding box with resize + rotate handles (only when NOT editing a group) */}
+        {selectedElements.length > 1 && !editingGroupId && (
           <GroupSelectionOverlay
             elements={selectedElements}
             canvasWidth={width}
@@ -248,6 +279,7 @@ function ElementWithInteraction({
   scale,
   isSelected,
   children,
+  screenshot,
 }: {
   elementId: string;
   canvasWidth: number;
@@ -255,11 +287,14 @@ function ElementWithInteraction({
   scale: number;
   isSelected: boolean;
   children: React.ReactNode;
+  screenshot: Screenshot;
 }) {
   const selectElement = useProjectStore((s) => s.selectElement);
   const toggleSelectElement = useProjectStore((s) => s.toggleSelectElement);
   const setEditingTextElement = useProjectStore((s) => s.setEditingTextElement);
   const editingTextElementId = useProjectStore((s) => s.editingTextElementId);
+  const editingGroupId = useProjectStore((s) => s.editingGroupId);
+  const enterGroup = useProjectStore((s) => s.enterGroup);
 
   const { handleMouseDown } = useDragElement({
     elementId,
@@ -326,7 +361,23 @@ function ElementWithInteraction({
           }}
           onDoubleClick={(e) => {
             e.stopPropagation();
-            if (element.type === 'text') {
+            const groups = screenshot.groups ?? {};
+
+            // Find which group this element belongs to
+            let elementGroupId: string | null = null;
+            for (const [gid, memberIds] of Object.entries(groups)) {
+              if (memberIds.includes(elementId)) {
+                elementGroupId = gid;
+                break;
+              }
+            }
+
+            if (elementGroupId && editingGroupId !== elementGroupId) {
+              // Double-click on grouped element → enter group, select this element
+              enterGroup(elementGroupId);
+              selectElement(elementId);
+            } else if (element.type === 'text') {
+              // Double-click on text (or text inside active group) → inline edit
               setEditingTextElement(elementId);
             }
           }}

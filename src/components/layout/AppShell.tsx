@@ -5,6 +5,7 @@ import { CanvasArea } from '../canvas/CanvasArea';
 import { ExportRenderer } from '../export/ExportRenderer';
 import { ResizeHandle } from '../common/ResizeHandle';
 import { HomePage } from '../home/HomePage';
+import { AppStorePreview } from '../preview/AppStorePreview';
 import { useProjectStore } from '@/store/useProjectStore';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef, useCallback } from 'react';
@@ -105,6 +106,7 @@ function EditorLayout() {
         )}
       </div>
       <ExportRenderer />
+      {useProjectStore((s) => s.showAppStorePreview) && <AppStorePreview />}
     </div>
   );
 }

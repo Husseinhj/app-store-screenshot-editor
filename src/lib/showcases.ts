@@ -11,6 +11,12 @@ export interface ShowcaseScreenshot {
   textColor: string;
   /** Which device shape to render */
   device: ShowcaseDevice;
+  /** Optional screenshot image URL to show inside the device frame */
+  screenshotUrl?: string;
+  /** Optional second screenshot for split/connected templates (paired device on adjacent screen) */
+  pairedScreenshotUrl?: string;
+  /** Optional per-screenshot template override (e.g. 'splitViewLeft' / 'splitViewRight') */
+  templateId?: string;
 }
 
 export interface ShowcaseApp {
@@ -40,9 +46,9 @@ export const showcaseApps: ShowcaseApp[] = [
     cardGradient: 'linear-gradient(135deg, #7c3aed, #4f46e5, #6366f1)',
     screenshots: [
       // iPhone (5)
-      { headline: 'Share Your Story', subtitle: 'Beautiful moments shared', screenBg: 'linear-gradient(180deg, #7c3aed 0%, #4338ca 100%)', textColor: '#ffffff', device: 'iphone' },
-      { headline: 'Discover Trends', subtitle: 'See what\'s trending', screenBg: 'linear-gradient(180deg, #5b21b6 0%, #3730a3 100%)', textColor: '#ffffff', device: 'iphone' },
-      { headline: 'Direct Messages', subtitle: 'Chat with friends', screenBg: 'linear-gradient(180deg, #6d28d9 0%, #4f46e5 100%)', textColor: '#ffffff', device: 'iphone' },
+      { headline: 'Share Your Story', subtitle: 'Beautiful moments shared', screenBg: 'linear-gradient(180deg, #7c3aed 0%, #4338ca 100%)', textColor: '#ffffff', device: 'iphone', screenshotUrl: '/showcases/instagram-profile.png' },
+      { headline: 'Discover Trends', subtitle: 'See what\'s trending', screenBg: 'linear-gradient(180deg, #5b21b6 0%, #3730a3 100%)', textColor: '#ffffff', device: 'iphone', screenshotUrl: '/showcases/instagram-feed.png' },
+      { headline: 'Direct Messages', subtitle: 'Chat with friends', screenBg: 'linear-gradient(180deg, #6d28d9 0%, #4f46e5 100%)', textColor: '#ffffff', device: 'iphone', screenshotUrl: '/showcases/instagram-explore.png' },
       { headline: 'Create Reels', subtitle: 'Short videos that shine', screenBg: 'linear-gradient(180deg, #7c3aed 0%, #6366f1 100%)', textColor: '#ffffff', device: 'iphone' },
       { headline: 'Your Profile', subtitle: 'Express yourself', screenBg: 'linear-gradient(180deg, #4c1d95 0%, #4338ca 100%)', textColor: '#ffffff', device: 'iphone' },
       // iPad (5)
@@ -77,8 +83,8 @@ export const showcaseApps: ShowcaseApp[] = [
     cardGradient: 'linear-gradient(135deg, #f0fdf4, #d1fae5, #a7f3d0)',
     screenshots: [
       // iPhone (5)
-      { headline: 'Browse Collections', subtitle: 'Curated picks for you', screenBg: 'linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%)', textColor: '#1a1a1a', device: 'iphone' },
-      { headline: 'One-Tap Checkout', subtitle: 'Fast & secure', screenBg: 'linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%)', textColor: '#1a1a1a', device: 'iphone' },
+      { headline: 'Browse Collections', subtitle: 'Curated picks for you', screenBg: 'linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%)', textColor: '#1a1a1a', device: 'iphone', screenshotUrl: '/showcases/amazon-categories.png', pairedScreenshotUrl: '/showcases/amazon-deals.png' },
+      { headline: 'One-Tap Checkout', subtitle: 'Fast & secure', screenBg: 'linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%)', textColor: '#1a1a1a', device: 'iphone', screenshotUrl: '/showcases/amazon-deals.png' },
       { headline: 'Wishlist & Favorites', subtitle: 'Save for later', screenBg: 'linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 100%)', textColor: '#1a1a1a', device: 'iphone' },
       { headline: 'Flash Deals', subtitle: 'Limited time offers', screenBg: 'linear-gradient(180deg, #d1fae5 0%, #a7f3d0 100%)', textColor: '#1a1a1a', device: 'iphone' },
       { headline: 'Order Tracking', subtitle: 'Real-time updates', screenBg: 'linear-gradient(180deg, #ecfdf5 0%, #f0fdf4 100%)', textColor: '#1a1a1a', device: 'iphone' },
@@ -188,8 +194,8 @@ export const showcaseApps: ShowcaseApp[] = [
     cardGradient: 'linear-gradient(135deg, #0a0a0a, #1a1a2e, #0a0a0a)',
     screenshots: [
       // iPhone (5)
-      { headline: 'Book in Seconds', subtitle: 'Tap, ride, arrive', screenBg: 'linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%)', textColor: '#ffffff', device: 'iphone' },
-      { headline: 'Live Tracking', subtitle: 'Know your ride', screenBg: 'linear-gradient(180deg, #111827 0%, #0a0a0a 100%)', textColor: '#ffffff', device: 'iphone' },
+      { headline: 'Book in Seconds', subtitle: 'Tap, ride, arrive', screenBg: 'linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%)', textColor: '#ffffff', device: 'iphone', screenshotUrl: '/showcases/uber-courier.png', pairedScreenshotUrl: '/showcases/uber-one.png' },
+      { headline: 'Live Tracking', subtitle: 'Know your ride', screenBg: 'linear-gradient(180deg, #111827 0%, #0a0a0a 100%)', textColor: '#ffffff', device: 'iphone', screenshotUrl: '/showcases/uber-one.png' },
       { headline: 'Ride History', subtitle: 'All your trips', screenBg: 'linear-gradient(180deg, #1a1a2e 0%, #111827 100%)', textColor: '#ffffff', device: 'iphone' },
       { headline: 'Choose Your Ride', subtitle: 'Economy to premium', screenBg: 'linear-gradient(180deg, #0a0a0a 0%, #111827 100%)', textColor: '#ffffff', device: 'iphone' },
       { headline: 'Rate & Tip', subtitle: 'Thank your driver', screenBg: 'linear-gradient(180deg, #111827 0%, #1a1a2e 100%)', textColor: '#ffffff', device: 'iphone' },

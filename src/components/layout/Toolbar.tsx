@@ -1,4 +1,4 @@
-import { Download, ZoomIn, ZoomOut, Undo2, Redo2, Home } from 'lucide-react';
+import { Download, ZoomIn, ZoomOut, Undo2, Redo2, Home, Eye } from 'lucide-react';
 import { useProjectStore } from '@/store/useProjectStore';
 import { useExport } from '@/hooks/useExport';
 import { useStore } from 'zustand';
@@ -71,6 +71,15 @@ export function Toolbar() {
             <ZoomIn size={14} />
           </button>
         </div>
+
+        <button
+          onClick={() => useProjectStore.getState().openAppStorePreview()}
+          className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-white/70 transition-colors hover:bg-surface-600 hover:text-white"
+          title="App Store Preview (⌘⇧P)"
+        >
+          <Eye size={14} />
+          Preview
+        </button>
 
         <button
           onClick={exportAllPlatforms}

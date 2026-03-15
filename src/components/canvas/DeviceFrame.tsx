@@ -411,23 +411,33 @@ function MacFrame({ def, screenshotUrl, maxHeight, colors, imgStyle }: { def: De
   const aspectRatio = def.frameWidth / def.frameHeight;
   const frameHeight = maxHeight;
   const frameWidth = frameHeight * aspectRatio;
+  // MacBook has very subtle rounding — scale with frame size
+  const lidR = Math.max(3, frameWidth * 0.012);
+  const baseR = Math.max(2, frameWidth * 0.008);
+  const screenR = Math.max(2, frameWidth * 0.006);
+  const borderW = Math.max(1, Math.min(2, frameWidth * 0.003));
 
   return (
     <div className="relative" style={{ width: frameWidth, height: frameHeight }}>
-      <div className="absolute rounded-t-xl" style={{ top: 0, left: frameWidth * 0.04, right: frameWidth * 0.04, bottom: frameHeight * 0.08, backgroundColor: colors.frameColor, border: `2px solid ${colors.borderColor}`, boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
-        <div className="absolute left-1/2 -translate-x-1/2 rounded-full bg-[#111]" style={{ top: frameHeight * 0.01, width: 8, height: 8, border: '1px solid #444' }} />
-        <div className="absolute overflow-hidden" style={{ top: `${def.screenInset.top * 0.9}%`, left: '3%', right: '3%', bottom: '3%', borderRadius: def.screenBorderRadius, backgroundColor: '#000' }}>
+      {/* Lid */}
+      <div className="absolute" style={{ top: 0, left: frameWidth * 0.04, right: frameWidth * 0.04, bottom: frameHeight * 0.08, backgroundColor: colors.frameColor, border: `${borderW}px solid ${colors.borderColor}`, borderRadius: `${lidR}px ${lidR}px 0 0`, boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+        {/* Camera */}
+        <div className="absolute left-1/2 -translate-x-1/2 rounded-full bg-[#111]" style={{ top: frameHeight * 0.01, width: Math.max(4, frameWidth * 0.012), height: Math.max(4, frameWidth * 0.012), border: '0.5px solid #444' }} />
+        {/* Screen */}
+        <div className="absolute overflow-hidden" style={{ top: `${def.screenInset.top * 0.9}%`, left: '3%', right: '3%', bottom: '3%', borderRadius: screenR, backgroundColor: '#000' }}>
           {screenshotUrl ? (
             <img src={screenshotUrl} alt="Screenshot" draggable={false} style={imgStyle} />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-black/80">
-              <div className="text-center text-white/30"><ImagePlus size={24} className="mx-auto mb-2" /><p className="text-xs">Drop screenshot</p></div>
+              <div className="text-center text-white/30"><ImagePlus size={Math.max(12, frameWidth * 0.03)} className="mx-auto mb-1" /><p style={{ fontSize: Math.max(7, frameWidth * 0.014) }}>Drop screenshot</p></div>
             </div>
           )}
         </div>
       </div>
-      <div className="absolute rounded-b-xl" style={{ bottom: 0, left: 0, right: 0, height: frameHeight * 0.08, background: `linear-gradient(to bottom, ${colors.frameColor}, ${colors.frameColor}dd)`, borderLeft: `2px solid ${colors.borderColor}`, borderRight: `2px solid ${colors.borderColor}`, borderBottom: `2px solid ${colors.borderColor}` }}>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 rounded-b-lg" style={{ width: frameWidth * 0.15, height: 4, backgroundColor: colors.borderColor }} />
+      {/* Base / hinge */}
+      <div className="absolute" style={{ bottom: 0, left: 0, right: 0, height: frameHeight * 0.08, background: `linear-gradient(to bottom, ${colors.frameColor}, ${colors.frameColor}dd)`, borderLeft: `${borderW}px solid ${colors.borderColor}`, borderRight: `${borderW}px solid ${colors.borderColor}`, borderBottom: `${borderW}px solid ${colors.borderColor}`, borderRadius: `0 0 ${baseR}px ${baseR}px` }}>
+        {/* Notch */}
+        <div className="absolute left-1/2 -translate-x-1/2" style={{ top: 0, width: frameWidth * 0.15, height: Math.max(2, frameHeight * 0.006), backgroundColor: colors.borderColor, borderRadius: `0 0 ${baseR}px ${baseR}px` }} />
       </div>
     </div>
   );

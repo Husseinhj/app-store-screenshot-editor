@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useLayoutEffect } from 'react';
 import { useProjectStore } from '@/store/useProjectStore';
 import { platformLabels } from '@/lib/devices';
 import { designTemplates, type DesignTemplate } from '@/lib/templates';
 import { showcaseApps, type ShowcaseApp, type ShowcaseScreenshot, type ShowcaseDevice } from '@/lib/showcases';
 import { getTextEffectStyles } from '@/lib/textEffects';
 import { NewProjectDialog } from './NewProjectDialog';
+import { DeviceFrame } from '../canvas/DeviceFrame';
 import {
   Plus,
   Trash2,
@@ -17,7 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import type { Platform } from '@/store/types';
+import type { Platform, DeviceType } from '@/store/types';
 
 // ─── Utility ───────────────────────────────────────────────────────────────────
 
@@ -343,8 +344,27 @@ function MiniDevice({
 
 // ─── Showcase Mini Screenshot ─────────────────────────────────────────────────
 
+/** Tiny 1x1 black pixel used as placeholder screenshot in previews to avoid "Drop screenshot" text */
+const BLACK_PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC';
+
+/** Resolve a public asset path with Vite's base URL prefix */
+function resolvePublicUrl(path: string): string {
+  if (!path || path.startsWith('data:') || path.startsWith('http')) return path;
+  const base = import.meta.env.BASE_URL ?? '/';
+  // Avoid double slashes
+  return base.endsWith('/') ? `${base}${path.replace(/^\//, '')}` : `${base}/${path.replace(/^\//, '')}`;
+}
+
+/** Map ShowcaseDevice to actual DeviceType for real SVG frame rendering */
+const showcaseDeviceMap: Record<ShowcaseDevice, DeviceType> = {
+  iphone: 'iphone-16-pro',
+  ipad: 'ipad-pro-13',
+  mac: 'macbook-pro',
+  watch: 'apple-watch-ultra-2',
+};
+
 /** A mini App Store screenshot preview — shows what the actual exported screenshot looks like:
- *  background + headline text + phone mockup with wireframe content */
+ *  background + headline text + real device mockup frame */
 function MiniScreenshotPreview({
   screenshot,
   template,
@@ -391,17 +411,21 @@ function MiniScreenshotPreview({
 
   // Check layout style
   const isEditorial = headlineSpec && headlineSpec.transform.x < 15 && headlineSpec.text?.alignment === 'left';
-  const deviceSpec = template?.elements.find((e) => e.type === 'device-frame');
-  const deviceX = deviceSpec?.transform.x ?? 20;
+
+  // Device sizing — use standard centered position for showcase, NOT connected-template positions
+  const deviceFrameId = showcaseDeviceMap[deviceType];
+  const isMac = deviceType === 'mac';
+  const deviceMaxW = isMac ? width * 0.84 : width * 0.6;
+  const deviceMaxH = isMac ? height * 0.55 : height * 0.7;
 
   return (
     <div
       className="relative overflow-hidden flex-shrink-0 rounded-[4px]"
       style={{ width, height, background: getBg(), boxShadow: '0 2px 8px rgba(0,0,0,0.3)', ...style }}
     >
-      {/* Text */}
+      {/* Text — always above device */}
       <div
-        className="absolute px-[8%]"
+        className="absolute px-[8%] z-10"
         style={{
           top: isEditorial ? '8%' : '4%',
           left: isEditorial ? '4%' : 0,
@@ -436,129 +460,24 @@ function MiniScreenshotPreview({
         </div>
       </div>
 
-      {/* Device mockup — adapts to device type */}
-      {deviceType === 'mac' ? (
-        <div
-          className="absolute overflow-hidden"
-          style={{
-            left: '10%',
-            bottom: '4%',
-            width: '80%',
-          }}
-        >
-          {/* Mac screen */}
-          <div
-            className="relative w-full"
-            style={{
-              aspectRatio: '16 / 10',
-              borderRadius: '4% / 6%',
-              backgroundColor: '#1c1c1e',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-            }}
-          >
-            <div
-              className="absolute overflow-hidden"
-              style={{ top: '3%', left: '3%', right: '3%', bottom: '3%', borderRadius: '2% / 3%', background: screenshot.screenBg }}
-            >
-              <ScreenContent headline="" subtitle="" textColor={screenshot.textColor} headlineFontSize={Math.max(3, width * 0.035)} subtitleFontSize={Math.max(2, width * 0.02)} />
-            </div>
-            {/* Camera dot */}
-            <div className="absolute bg-black/60 rounded-full" style={{ top: '5%', left: '50%', transform: 'translateX(-50%)', width: '2%', height: '3%' }} />
-          </div>
-          {/* Mac base */}
-          <div className="mx-auto" style={{ width: '35%', height: 3, background: 'linear-gradient(180deg, #444 0%, #222 100%)', borderRadius: '0 0 3px 3px' }} />
-          <div className="mx-auto" style={{ width: '50%', height: 2, background: '#1a1a1a', borderRadius: '0 0 4px 4px' }} />
-        </div>
-      ) : deviceType === 'ipad' ? (
-        <div
-          className="absolute overflow-hidden"
-          style={{
-            left: isEditorial ? '45%' : `${Math.max(deviceX, 12)}%`,
-            top: `${deviceSpec?.transform.y ?? 28}%`,
-            width: `${Math.min(deviceSpec?.transform.width ?? 60, 70)}%`,
-            bottom: 0,
-          }}
-        >
-          <div
-            className="relative w-full"
-            style={{
-              aspectRatio: '3 / 4',
-              borderRadius: '8% / 6%',
-              backgroundColor: '#1c1c1e',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-            }}
-          >
-            <div
-              className="absolute overflow-hidden"
-              style={{ top: '2.5%', left: '3%', right: '3%', bottom: '2.5%', borderRadius: '5% / 3.5%', background: screenshot.screenBg }}
-            >
-              <ScreenContent headline="" subtitle="" textColor={screenshot.textColor} headlineFontSize={Math.max(3, width * 0.04)} subtitleFontSize={Math.max(2, width * 0.025)} />
-            </div>
-            {/* Camera dot */}
-            <div className="absolute bg-black/60 rounded-full" style={{ top: '1.2%', left: '50%', transform: 'translateX(-50%)', width: '2.5%', height: '1%' }} />
-          </div>
-        </div>
-      ) : deviceType === 'watch' ? (
-        <div
-          className="absolute overflow-hidden"
-          style={{
-            left: '25%',
-            top: '30%',
-            width: '50%',
-            bottom: 0,
-          }}
-        >
-          <div
-            className="relative w-full"
-            style={{
-              aspectRatio: '5 / 6',
-              borderRadius: '24% / 20%',
-              backgroundColor: '#1a1a1a',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4), inset 0 0 0 0.5px rgba(255,255,255,0.06)',
-            }}
-          >
-            {/* Digital Crown */}
-            <div className="absolute" style={{ right: '-3%', top: '28%', width: '4%', height: '14%', borderRadius: 2, backgroundColor: '#333' }} />
-            <div
-              className="absolute overflow-hidden"
-              style={{ top: '8%', left: '8%', right: '8%', bottom: '8%', borderRadius: '18% / 15%', background: screenshot.screenBg }}
-            >
-              <ScreenContent headline="" subtitle="" textColor={screenshot.textColor} headlineFontSize={Math.max(3, width * 0.04)} subtitleFontSize={Math.max(2, width * 0.025)} />
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* iPhone (default) */
-        <div
-          className="absolute overflow-hidden"
-          style={{
-            left: isEditorial ? '50%' : `${Math.max(deviceX, 15)}%`,
-            top: `${deviceSpec?.transform.y ?? 24}%`,
-            width: `${Math.min(deviceSpec?.transform.width ?? 60, 65)}%`,
-            bottom: 0,
-            transform: deviceSpec?.transform.rotation ? `rotate(${deviceSpec.transform.rotation}deg)` : undefined,
-          }}
-        >
-          <div
-            className="relative w-full"
-            style={{
-              aspectRatio: '9 / 19.5',
-              borderRadius: '14% / 6.5%',
-              backgroundColor: '#1c1c1e',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-            }}
-          >
-            <div
-              className="absolute overflow-hidden"
-              style={{ top: '2.5%', left: '5%', right: '5%', bottom: '2.5%', borderRadius: '12% / 5.5%', background: screenshot.screenBg }}
-            >
-              <ScreenContent headline="" subtitle="" textColor={screenshot.textColor} headlineFontSize={Math.max(3, width * 0.04)} subtitleFontSize={Math.max(2, width * 0.025)} />
-            </div>
-            {/* Dynamic Island */}
-            <div className="absolute bg-black" style={{ top: '3.5%', left: '50%', transform: 'translateX(-50%)', width: '28%', height: '2.8%', borderRadius: 99 }} />
-          </div>
-        </div>
-      )}
+      {/* Real device frame — centered at bottom */}
+      <div
+        className="absolute flex justify-center"
+        style={{
+          left: isEditorial ? '40%' : '50%',
+          bottom: isMac ? '4%' : 0,
+          transform: 'translateX(-50%)',
+        }}
+      >
+        <DeviceFrame
+          device={deviceFrameId}
+          screenshotUrl={screenshot.screenshotUrl ? resolvePublicUrl(screenshot.screenshotUrl) : BLACK_PIXEL}
+          maxHeight={deviceMaxH}
+          maxWidth={deviceMaxW}
+          showFrame={true}
+          frameStyle="svg"
+        />
+      </div>
     </div>
   );
 }
@@ -753,6 +672,54 @@ function MiniAppScreen({ accent }: { accent: string }) {
   );
 }
 
+/** Renders a real SVG device frame positioned by template transform percentages */
+function GalleryCardDevice({
+  transform,
+  containerRef,
+}: {
+  transform: { x: number; y: number; width: number; height: number; rotation: number };
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const [dims, setDims] = useState({ w: 0, h: 0 });
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => setDims({ w: el.offsetWidth, h: el.offsetHeight });
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [containerRef]);
+
+  if (dims.w === 0 || dims.h === 0) return null;
+
+  const pixelW = (transform.width / 100) * dims.w;
+  const pixelH = (transform.height / 100) * dims.h;
+
+  return (
+    <div
+      className="absolute overflow-hidden"
+      style={{
+        left: `${transform.x}%`,
+        top: `${transform.y}%`,
+        width: `${transform.width}%`,
+        bottom: 0,
+        transform: transform.rotation ? `rotate(${transform.rotation}deg)` : undefined,
+      }}
+    >
+      <DeviceFrame
+        device="iphone-16-pro"
+        screenshotUrl={BLACK_PIXEL}
+        maxHeight={pixelH}
+        maxWidth={pixelW}
+        showFrame={true}
+        frameStyle="svg"
+      />
+    </div>
+  );
+}
+
 function TemplateGalleryCard({
   template,
   onUse,
@@ -762,6 +729,7 @@ function TemplateGalleryCard({
   onUse: () => void;
   showcaseApp?: ShowcaseApp;
 }) {
+  const cardRef = useRef<HTMLDivElement>(null);
   const getBgCss = (): string => {
     if (template.background.type === 'solid') return template.background.solidColor;
     if (template.background.type === 'gradient') {
@@ -794,7 +762,7 @@ function TemplateGalleryCard({
       title={template.description}
     >
       {/* Background */}
-      <div className="absolute inset-0" style={{ background: getBgCss() }} />
+      <div ref={cardRef} className="absolute inset-0" style={{ background: getBgCss() }} />
 
       {/* Only small circle decorations — no rectangles */}
       {circles.map((shape, i) => (
@@ -854,53 +822,12 @@ function TemplateGalleryCard({
           )}
         </div>
 
-        {/* Phone mockup — width-driven, aspect ratio preserved */}
+        {/* Device mockup — real SVG device frame */}
         {deviceSpec && (
-          <div
-            className="absolute overflow-hidden"
-            style={{
-              left: `${deviceX}%`,
-              top: `${deviceSpec.transform.y}%`,
-              width: `${Math.min(deviceSpec.transform.width, 65)}%`,
-              bottom: 0,
-              transform: deviceRotation ? `rotate(${deviceRotation}deg)` : undefined,
-            }}
-          >
-            <div
-              className="relative w-full"
-              style={{
-                aspectRatio: '9 / 19.5',
-                borderRadius: '14% / 6.5%',
-                backgroundColor: '#1c1c1e',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.5), inset 0 0 0 0.5px rgba(255,255,255,0.08)',
-              }}
-            >
-              {/* Screen */}
-              <div
-                className="absolute overflow-hidden"
-                style={{
-                  top: '2.5%',
-                  left: '5%',
-                  right: '5%',
-                  bottom: '2.5%',
-                  borderRadius: '12% / 5.5%',
-                  background: 'linear-gradient(180deg, #111 0%, #0a0a0a 100%)',
-                }}
-              >
-                <MiniAppScreen accent={preview.screenAccent} />
-              </div>
-              {/* Dynamic Island */}
-              <div
-                className="absolute bg-black"
-                style={{ top: '3.5%', left: '50%', transform: 'translateX(-50%)', width: '28%', height: '2.8%', borderRadius: 99 }}
-              />
-              {/* Home indicator */}
-              <div
-                className="absolute"
-                style={{ bottom: '2%', left: '50%', transform: 'translateX(-50%)', width: '30%', height: '0.8%', borderRadius: 99, backgroundColor: 'rgba(255,255,255,0.15)' }}
-              />
-            </div>
-          </div>
+          <GalleryCardDevice
+            transform={deviceSpec.transform}
+            containerRef={cardRef}
+          />
         )}
       </div>
 
@@ -1040,6 +967,28 @@ export function HomePage() {
     createProject(app.name, app.platform);
     const store = useProjectStore.getState();
 
+    // Helper to set up a single screenshot from showcase data
+    const setupScreenshot = (shot: (typeof app.screenshots)[0]) => {
+      const templateToApply = shot.templateId ?? app.templateId;
+      store.applyTemplate(templateToApply);
+      const ss = store.getSelectedScreenshot();
+      if (!ss) return;
+
+      const textEls = ss.elements.filter((e) => e.type === 'text');
+      if (textEls[0]) store.updateTextElement(textEls[0].id, { content: shot.headline });
+      if (textEls[1]) store.updateTextElement(textEls[1].id, { content: shot.subtitle });
+
+      // Set device frame screenshot(s) if available
+      const deviceEls = ss.elements.filter((e) => e.type === 'device-frame');
+      if (shot.screenshotUrl && deviceEls[0]) {
+        store.updateDeviceElement(deviceEls[0].id, { screenshotImageUrl: resolvePublicUrl(shot.screenshotUrl) });
+      }
+      // For split/connected templates with two device frames, set the paired screenshot
+      if (shot.pairedScreenshotUrl && deviceEls[1]) {
+        store.updateDeviceElement(deviceEls[1].id, { screenshotImageUrl: resolvePublicUrl(shot.pairedScreenshotUrl) });
+      }
+    };
+
     // For each platform that has showcase screenshots, set up screens
     for (const [platform, shots] of Object.entries(byPlatform) as [Platform, typeof app.screenshots][]) {
       if (shots.length === 0) continue;
@@ -1047,25 +996,13 @@ export function HomePage() {
       // Switch to this platform
       store.setPlatform(platform);
 
-      // Apply template + set text for the first screenshot (already exists)
-      store.applyTemplate(app.templateId);
-      const firstSs = store.getSelectedScreenshot();
-      if (firstSs) {
-        const textEls = firstSs.elements.filter((e) => e.type === 'text');
-        if (textEls[0]) store.updateTextElement(textEls[0].id, { content: shots[0].headline });
-        if (textEls[1]) store.updateTextElement(textEls[1].id, { content: shots[0].subtitle });
-      }
+      // Set up the first screenshot (already exists from createProject)
+      setupScreenshot(shots[0]);
 
       // Add additional screenshots for this platform
       for (let i = 1; i < shots.length; i++) {
         store.addScreenshot();
-        store.applyTemplate(app.templateId);
-        const ss = store.getSelectedScreenshot();
-        if (ss) {
-          const textEls = ss.elements.filter((e) => e.type === 'text');
-          if (textEls[0]) store.updateTextElement(textEls[0].id, { content: shots[i].headline });
-          if (textEls[1]) store.updateTextElement(textEls[1].id, { content: shots[i].subtitle });
-        }
+        setupScreenshot(shots[i]);
       }
     }
 

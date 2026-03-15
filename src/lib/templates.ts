@@ -827,10 +827,10 @@ export const designTemplates: DesignTemplate[] = [
           lineHeight: 1.3,
         },
       },
-      // Device frame extending past right edge
+      // Device frame — right half extends past right edge (full-size, 50% visible)
       {
         type: 'device-frame',
-        transform: { x: 38, y: 18, width: 72, height: 80, rotation: 0 },
+        transform: { x: 70, y: 10, width: 60, height: 85, rotation: 0 },
         zIndex: 3,
         device: { device: 'auto', showDeviceFrame: true },
       },
@@ -856,10 +856,10 @@ export const designTemplates: DesignTemplate[] = [
       imageUrl: null,
     },
     elements: [
-      // Device frame extending past left edge
+      // Device frame — left half extends past left edge (full-size, 50% visible)
       {
         type: 'device-frame',
-        transform: { x: -10, y: 18, width: 72, height: 80, rotation: 0 },
+        transform: { x: -30, y: 10, width: 60, height: 85, rotation: 0 },
         zIndex: 0,
         device: { device: 'auto', showDeviceFrame: true },
       },
@@ -948,10 +948,10 @@ export const designTemplates: DesignTemplate[] = [
           lineHeight: 1.3,
         },
       },
-      // Device extending past right edge
+      // Device — right half extends past right edge (full-size, 50% visible)
       {
         type: 'device-frame',
-        transform: { x: 32, y: 12, width: 78, height: 86, rotation: 0 },
+        transform: { x: 70, y: 8, width: 60, height: 88, rotation: 0 },
         zIndex: 3,
         device: { device: 'auto', showDeviceFrame: true },
       },
@@ -970,10 +970,10 @@ export const designTemplates: DesignTemplate[] = [
       imageUrl: null,
     },
     elements: [
-      // Device extending past left edge
+      // Device — left half extends past left edge (full-size, 50% visible)
       {
         type: 'device-frame',
-        transform: { x: -10, y: 12, width: 78, height: 86, rotation: 0 },
+        transform: { x: -30, y: 8, width: 60, height: 88, rotation: 0 },
         zIndex: 0,
         device: { device: 'auto', showDeviceFrame: true },
       },

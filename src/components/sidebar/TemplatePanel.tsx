@@ -1,8 +1,13 @@
-import { useState } from 'react';
+import { useState, useRef, useLayoutEffect } from 'react';
 import { SidebarSection } from './SidebarSection';
 import { designTemplates, type DesignTemplate, type TemplateCategory } from '@/lib/templates';
 import { useProjectStore } from '@/store/useProjectStore';
 import { getTextEffectStyles } from '@/lib/textEffects';
+import { DeviceFrame } from '../canvas/DeviceFrame';
+import type { ElementTransform } from '@/store/types';
+
+/** Tiny 1x1 black pixel used as placeholder screenshot in previews */
+const BLACK_PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC';
 
 const categories: { label: string; value: TemplateCategory | 'all' }[] = [
   { label: 'All', value: 'all' },
@@ -14,8 +19,57 @@ const categories: { label: string; value: TemplateCategory | 'all' }[] = [
   { label: 'Connected', value: 'connected' },
 ];
 
+/** Renders a real SVG device frame in a small preview, positioned by template transform percentages */
+function MiniDeviceInTemplate({
+  transform,
+  containerRef,
+}: {
+  transform: ElementTransform;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const [dims, setDims] = useState({ w: 0, h: 0 });
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => setDims({ w: el.offsetWidth, h: el.offsetHeight });
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [containerRef]);
+
+  if (dims.w === 0 || dims.h === 0) return null;
+
+  const pixelW = (transform.width / 100) * dims.w;
+  const pixelH = (transform.height / 100) * dims.h;
+
+  return (
+    <div
+      className="absolute overflow-hidden"
+      style={{
+        left: `${transform.x}%`,
+        top: `${transform.y}%`,
+        width: `${transform.width}%`,
+        bottom: 0,
+        transform: transform.rotation ? `rotate(${transform.rotation}deg)` : undefined,
+      }}
+    >
+      <DeviceFrame
+        device="iphone-16-pro"
+        screenshotUrl={BLACK_PIXEL}
+        maxHeight={pixelH}
+        maxWidth={pixelW}
+        showFrame={true}
+        frameStyle="svg"
+      />
+    </div>
+  );
+}
+
 function TemplateCard({ template }: { template: DesignTemplate }) {
   const applyTemplate = useProjectStore((s) => s.applyTemplate);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // Determine background CSS
   const bgStyle: React.CSSProperties = {};
@@ -58,7 +112,7 @@ function TemplateCard({ template }: { template: DesignTemplate }) {
       title={template.description}
     >
       {/* Background preview */}
-      <div className="absolute inset-0" style={bgStyle} />
+      <div ref={cardRef} className="absolute inset-0" style={bgStyle} />
 
       {/* Decorative shapes */}
       {shapes.map((shape, i) => {
@@ -124,35 +178,15 @@ function TemplateCard({ template }: { template: DesignTemplate }) {
             </div>
           )}
         </div>
-
-        {/* Device placeholder */}
-        {deviceSpec && (
-          <div
-            className="flex items-center justify-center"
-            style={{
-              position: 'absolute',
-              left: `${deviceSpec.transform.x}%`,
-              top: `${deviceSpec.transform.y}%`,
-              width: `${deviceSpec.transform.width}%`,
-              height: `${deviceSpec.transform.height}%`,
-              transform: deviceSpec.transform.rotation ? `rotate(${deviceSpec.transform.rotation}deg)` : undefined,
-            }}
-          >
-            <div
-              className="w-full h-full rounded-[3px] border border-white/20"
-              style={{
-                backgroundColor: 'rgba(0,0,0,0.3)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-              }}
-            >
-              {/* Screen content mock */}
-              <div className="w-full h-full rounded-[2px] overflow-hidden p-[2px]">
-                <div className="w-full h-full rounded-[1px] bg-gradient-to-b from-white/5 to-white/2" />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Device mockup — uses real SVG device frame */}
+      {deviceSpec && (
+        <MiniDeviceInTemplate
+          transform={deviceSpec.transform}
+          containerRef={cardRef}
+        />
+      )}
 
       {/* Paired template badge */}
       {template.pairedWith && (

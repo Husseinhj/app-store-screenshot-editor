@@ -107,6 +107,14 @@ interface ProjectStore {
   zoom: number;
   selectedElementIds: string[];
   editingTextElementId: string | null;
+  editingGroupId: string | null;
+
+  // App Store Preview
+  showAppStorePreview: boolean;
+  previewPlatform: Platform;
+  openAppStorePreview: () => void;
+  closeAppStorePreview: () => void;
+  setPreviewPlatform: (platform: Platform) => void;
 
   // Multi-project actions
   createProject: (name: string, platform: Platform) => void;
@@ -209,6 +217,8 @@ interface ProjectStore {
   ungroupSelectedElements: () => void;
   getGroupForElement: (elementId: string) => string | null;
   flipSelectedElements: (axis: 'x' | 'y') => void;
+  enterGroup: (groupId: string) => void;
+  exitGroup: () => void;
 
   // Template actions
   applyTemplate: (templateId: string) => void;
@@ -268,6 +278,11 @@ export const useProjectStore = create<ProjectStore>()(
       zoom: 100,
       selectedElementIds: [],
       editingTextElementId: null,
+      editingGroupId: null,
+
+      // ─── App Store Preview ────────────────────────────────────────────
+      showAppStorePreview: false,
+      previewPlatform: 'iphone' as Platform,
 
       // ─── Multi-project actions ──────────────────────────────────────────
 
@@ -550,15 +565,28 @@ export const useProjectStore = create<ProjectStore>()(
 
       selectElement: (elementId) => {
         if (!elementId) {
-          set({ selectedElementIds: [] });
+          set({ selectedElementIds: [], editingGroupId: null });
           return;
         }
-        // Auto-select group members
         const state = get();
         const screenshot = getPlatformScreenshots(state.project).find(
           (s) => s.id === state.project.selectedScreenshotId
         );
         const groups = screenshot?.groups ?? {};
+
+        // If editing a group, allow sub-selection of individual members
+        if (state.editingGroupId) {
+          const editingMembers = groups[state.editingGroupId];
+          if (editingMembers?.includes(elementId)) {
+            // Clicked element is in the active group — select only this element
+            set({ selectedElementIds: [elementId] });
+            return;
+          }
+          // Clicked outside the active group — exit group editing first
+          set({ editingGroupId: null });
+        }
+
+        // Auto-select group members (normal behavior)
         for (const memberIds of Object.values(groups)) {
           if (memberIds.includes(elementId)) {
             set({ selectedElementIds: [...memberIds] });
@@ -574,6 +602,24 @@ export const useProjectStore = create<ProjectStore>()(
           (s) => s.id === state.project.selectedScreenshotId
         );
         const groups = screenshot?.groups ?? {};
+
+        // If editing a group, toggle individual elements within that group
+        if (state.editingGroupId) {
+          const editingMembers = groups[state.editingGroupId];
+          if (editingMembers?.includes(elementId)) {
+            const current = state.selectedElementIds;
+            const isAlreadySelected = current.includes(elementId);
+            if (isAlreadySelected) {
+              set({ selectedElementIds: current.filter((id) => id !== elementId) });
+            } else {
+              set({ selectedElementIds: [...current, elementId] });
+            }
+            return;
+          }
+          // Element is outside the active group — exit group editing
+          set({ editingGroupId: null });
+        }
+
         // Find group members for this element (if any)
         let idsToToggle = [elementId];
         for (const memberIds of Object.values(groups)) {
@@ -988,6 +1034,14 @@ export const useProjectStore = create<ProjectStore>()(
             }
           }
         })),
+
+      enterGroup: (groupId) => set({ editingGroupId: groupId }),
+      exitGroup: () => set({ editingGroupId: null }),
+
+      // ─── App Store Preview ────────────────────────────────────────────
+      openAppStorePreview: () => set({ showAppStorePreview: true, previewPlatform: get().project.platform }),
+      closeAppStorePreview: () => set({ showAppStorePreview: false }),
+      setPreviewPlatform: (platform) => set({ previewPlatform: platform }),
 
       // ─── Template ────────────────────────────────────────────────────
 

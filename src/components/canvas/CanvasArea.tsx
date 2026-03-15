@@ -45,12 +45,25 @@ export function CanvasArea() {
         e.preventDefault();
         selectedElementIds.forEach((id) => removeElement(id));
       }
-      // Escape to exit inline editing or deselect
+      // Escape to exit inline editing, exit group, or deselect
       if (e.key === 'Escape') {
+        const state = useProjectStore.getState();
         if (isEditingText) {
-          useProjectStore.getState().setEditingTextElement(null);
+          state.setEditingTextElement(null);
+        } else if (state.editingGroupId) {
+          // Exit group editing → select all group members
+          const platform = state.project.platform;
+          const screenshots = state.project.screenshotsByPlatform[platform] ?? [];
+          const screenshot = screenshots.find(
+            (s: Screenshot) => s.id === state.project.selectedScreenshotId
+          );
+          const groupMembers = screenshot?.groups?.[state.editingGroupId] ?? [];
+          state.exitGroup();
+          if (groupMembers.length > 0) {
+            state.selectElements(groupMembers);
+          }
         } else {
-          useProjectStore.getState().selectElement(null);
+          state.selectElement(null);
         }
       }
       // Select all: Cmd+A / Ctrl+A
@@ -59,6 +72,16 @@ export function CanvasArea() {
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
         e.preventDefault();
         useProjectStore.getState().selectAllElements();
+      }
+      // Preview: Cmd+Shift+P / Ctrl+Shift+P
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'p') {
+        e.preventDefault();
+        const state = useProjectStore.getState();
+        if (state.showAppStorePreview) {
+          state.closeAppStorePreview();
+        } else {
+          state.openAppStorePreview();
+        }
       }
       // Undo: Cmd+Z / Ctrl+Z
       if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
