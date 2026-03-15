@@ -45,10 +45,18 @@ export function getFrameColors(def: DeviceDefinition, variantId: string) {
   return def.colorVariants.find((v) => v.id === variantId) ?? def.colorVariants[0];
 }
 
+/** Resolve a device asset path with the Vite base URL so it works in production builds */
+function resolveDevicePath(path: string | null): string | null {
+  if (!path) return null;
+  const base = import.meta.env.BASE_URL ?? '/';
+  return `${base}${path.startsWith('/') ? path.slice(1) : path}`;
+}
+
 /** Get the SVG path for a specific variant, falling back to the device default */
 export function getSvgPathForVariant(def: DeviceDefinition, variantId: string): string | null {
   const variant = def.colorVariants.find((v) => v.id === variantId);
-  return variant?.svgPath ?? def.svgPath;
+  const raw = variant?.svgPath ?? def.svgPath;
+  return resolveDevicePath(raw);
 }
 
 /** Returns frame dimensions oriented for portrait/landscape (iPad only). CSS mode uses these. */

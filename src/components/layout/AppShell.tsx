@@ -4,7 +4,7 @@ import { Toolbar } from './Toolbar';
 import { CanvasArea } from '../canvas/CanvasArea';
 import { ExportRenderer } from '../export/ExportRenderer';
 import { ResizeHandle } from '../common/ResizeHandle';
-import { ProjectList } from '../home/ProjectList';
+import { HomePage } from '../home/HomePage';
 import { useProjectStore } from '@/store/useProjectStore';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef, useCallback } from 'react';
@@ -13,7 +13,7 @@ export function AppShell() {
   const appView = useProjectStore((s) => s.appView);
 
   if (appView === 'home') {
-    return <ProjectList />;
+    return <HomePage />;
   }
 
   return <EditorLayout />;
