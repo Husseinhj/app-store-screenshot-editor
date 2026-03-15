@@ -185,9 +185,9 @@ export const designTemplates: DesignTemplate[] = [
       },
     ],
     platformOverrides: {
-      ipad:           { 0: { y: 4, height: 12 }, 1: { y: 16 }, 2: { x: 18, y: 28, width: 64, height: 65, rotation: 3 } },
-      mac:            { 0: { x: 5, y: 12, width: 40, height: 20 }, 1: { x: 5, y: 32, width: 40 }, 2: { x: 48, y: 5, width: 50, height: 90, rotation: 0 }, 3: { x: 80, y: 50 }, 4: { x: -5, y: 60 } },
-      'apple-watch':  { 0: { y: 5, height: 18 }, 1: { y: 22 }, 2: { x: 18, y: 35, width: 64, height: 58, rotation: 0 } },
+      ipad:           { 0: { y: 4, height: 12 }, 1: { y: 16 }, 2: { x: 18, y: 28, width: 64, height: 65, rotation: 3 }, 3: { width: 30, height: 30 }, 4: { width: 25, height: 25 } },
+      mac:            { 0: { x: 5, y: 12, width: 40, height: 20 }, 1: { x: 5, y: 32, width: 40 }, 2: { x: 48, y: 5, width: 50, height: 90, rotation: 0 }, 3: { x: 80, y: 50, width: 18, height: 62 }, 4: { x: -5, y: 60, width: 15, height: 52 } },
+      'apple-watch':  { 0: { y: 5, height: 18 }, 1: { y: 22 }, 2: { x: 18, y: 35, width: 64, height: 58, rotation: 0 }, 3: { width: 8, height: 9 }, 4: { width: 6, height: 7 } },
     },
   },
 
@@ -252,9 +252,9 @@ export const designTemplates: DesignTemplate[] = [
       },
     ],
     platformOverrides: {
-      ipad:           { 0: { y: 4 }, 1: { y: 14 }, 2: { x: 18, y: 22, width: 60, height: 68 }, 3: { x: 15, y: 20, width: 60, height: 68 }, 4: { x: 22, y: 24, width: 56, height: 65 } },
-      mac:            { 0: { x: 5, y: 15, width: 35 }, 1: { x: 5, y: 30, width: 35 }, 2: { x: 43, y: 8, width: 55, height: 84 }, 3: { x: 40, y: 6, width: 55, height: 84 }, 4: { x: 45, y: 10, width: 52, height: 80 } },
-      'apple-watch':  { 0: { y: 5 }, 1: { y: 18 }, 2: { x: 20, y: 30, width: 60, height: 60 }, 3: { x: 18, y: 28, width: 60, height: 60 }, 4: { x: 22, y: 32, width: 56, height: 58 } },
+      ipad:           { 0: { y: 4 }, 1: { y: 14 }, 2: { x: 18, y: 22, width: 60, height: 68 }, 3: { x: 15, y: 20, width: 60, height: 72 }, 4: { x: 22, y: 24, width: 56, height: 65 } },
+      mac:            { 0: { x: 5, y: 15, width: 35 }, 1: { x: 5, y: 30, width: 35 }, 2: { x: 43, y: 4, width: 55, height: 90 }, 3: { x: 40, y: 2, width: 55, height: 90 }, 4: { x: 45, y: 6, width: 52, height: 86 } },
+      'apple-watch':  { 0: { y: 5 }, 1: { y: 18 }, 2: { x: 20, y: 30, width: 60, height: 60 }, 3: { x: 18, y: 28, width: 60, height: 62 }, 4: { x: 22, y: 32, width: 56, height: 58 } },
     },
   },
 
@@ -313,9 +313,9 @@ export const designTemplates: DesignTemplate[] = [
       },
     ],
     platformOverrides: {
-      ipad:           { 0: { y: 5 }, 1: { y: 16 }, 2: { x: 14, y: 24, width: 72, height: 70 }, 3: { x: 20, y: 28, width: 60, height: 65 } },
-      mac:            { 0: { x: 5, y: 15, width: 35 }, 1: { x: 5, y: 35, width: 35 }, 2: { x: 42, y: 5, width: 55, height: 90 }, 3: { x: 45, y: 8, width: 52, height: 84 } },
-      'apple-watch':  { 0: { y: 5, height: 15 }, 1: { y: 22 }, 2: { x: 15, y: 30, width: 70, height: 62 }, 3: { x: 18, y: 32, width: 64, height: 58 } },
+      ipad:           { 0: { y: 5 }, 1: { y: 16 }, 2: { x: 14, y: 24, width: 72, height: 72 }, 3: { x: 20, y: 28, width: 60, height: 65 } },
+      mac:            { 0: { x: 5, y: 15, width: 35 }, 1: { x: 5, y: 35, width: 35 }, 2: { x: 42, y: 3, width: 55, height: 94 }, 3: { x: 45, y: 6, width: 52, height: 88 } },
+      'apple-watch':  { 0: { y: 5, height: 15 }, 1: { y: 22 }, 2: { x: 15, y: 28, width: 70, height: 66 }, 3: { x: 18, y: 30, width: 64, height: 62 } },
     },
   },
 
@@ -693,9 +693,9 @@ export const designTemplates: DesignTemplate[] = [
       },
     ],
     platformOverrides: {
-      ipad:           { 0: { y: 4 }, 1: { y: 16 }, 2: { x: 18, y: 28, width: 64, height: 65, rotation: -2 } },
-      mac:            { 0: { x: 5, y: 10, width: 40 }, 1: { x: 5, y: 30, width: 40 }, 2: { x: 48, y: 5, width: 50, height: 90, rotation: 0 }, 3: { x: 85, y: 3 }, 4: { x: 2, y: 12 }, 5: { x: 88, y: 40 } },
-      'apple-watch':  { 0: { y: 5 }, 1: { y: 22 }, 2: { x: 18, y: 32, width: 64, height: 58, rotation: 0 } },
+      ipad:           { 0: { y: 4 }, 1: { y: 16 }, 2: { x: 18, y: 28, width: 64, height: 65, rotation: -2 }, 3: { width: 8, height: 8 }, 4: { width: 6, height: 6 }, 5: { width: 10, height: 10 } },
+      mac:            { 0: { x: 5, y: 10, width: 40 }, 1: { x: 5, y: 30, width: 40 }, 2: { x: 48, y: 5, width: 50, height: 90, rotation: 0 }, 3: { x: 85, y: 3, width: 8, height: 18 }, 4: { x: 2, y: 12, width: 6, height: 14 }, 5: { x: 88, y: 40, width: 10, height: 22 } },
+      'apple-watch':  { 0: { y: 5 }, 1: { y: 22 }, 2: { x: 18, y: 32, width: 64, height: 58, rotation: 0 }, 3: { width: 8, height: 9 }, 4: { width: 6, height: 7 }, 5: { width: 10, height: 11 } },
     },
   },
 
@@ -760,9 +760,9 @@ export const designTemplates: DesignTemplate[] = [
       },
     ],
     platformOverrides: {
-      ipad:           { 2: { y: 5 }, 3: { y: 16 }, 4: { x: 18, y: 28, width: 64, height: 62 } },
-      mac:            { 0: { x: -5, y: -5, width: 40, height: 30 }, 1: { x: 75, y: 65, width: 35, height: 25 }, 2: { x: 5, y: 15, width: 35 }, 3: { x: 5, y: 32, width: 35 }, 4: { x: 45, y: 5, width: 52, height: 90 } },
-      'apple-watch':  { 2: { y: 5 }, 3: { y: 18 }, 4: { x: 18, y: 30, width: 64, height: 60 } },
+      ipad:           { 0: { width: 50, height: 50 }, 1: { width: 40, height: 40 }, 2: { y: 5 }, 3: { y: 16 }, 4: { x: 18, y: 28, width: 64, height: 62 } },
+      mac:            { 0: { x: -5, y: -10, width: 35, height: 55 }, 1: { x: 75, y: 50, width: 30, height: 48 }, 2: { x: 5, y: 15, width: 35 }, 3: { x: 5, y: 32, width: 35 }, 4: { x: 45, y: 5, width: 52, height: 90 } },
+      'apple-watch':  { 0: { width: 45, height: 55 }, 1: { width: 35, height: 45 }, 2: { y: 5 }, 3: { y: 18 }, 4: { x: 18, y: 30, width: 64, height: 60 } },
     },
   },
 ];

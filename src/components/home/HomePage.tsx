@@ -158,7 +158,7 @@ function ShowcaseSection({ onCreateFromShowcase }: { onCreateFromShowcase: (app:
 
 // ─── Mini Device Frames ────────────────────────────────────────────────────────
 
-/** Shared screen content rendered inside any mini device */
+/** Shared screen content rendered inside any mini device — wireframe app UI */
 function ScreenContent({
   headline,
   subtitle,
@@ -172,18 +172,43 @@ function ScreenContent({
   headlineFontSize: number;
   subtitleFontSize: number;
 }) {
+  const accent = textColor;
   return (
-    <div className="flex flex-col items-center justify-center h-full px-[6%] text-center">
-      <div className="font-bold leading-tight" style={{ fontSize: headlineFontSize, color: textColor }}>
-        {headline}
+    <div className="flex flex-col h-full w-full">
+      {/* Top area: headline + subtitle */}
+      <div className="flex flex-col items-center px-[6%] pt-[8%] text-center" style={{ flex: '0 0 auto' }}>
+        <div className="font-bold leading-tight" style={{ fontSize: headlineFontSize, color: textColor }}>
+          {headline}
+        </div>
+        <div className="mt-0.5 leading-tight" style={{ fontSize: subtitleFontSize, color: textColor, opacity: 0.6 }}>
+          {subtitle}
+        </div>
       </div>
-      <div className="mt-0.5 leading-tight" style={{ fontSize: subtitleFontSize, color: textColor, opacity: 0.6 }}>
-        {subtitle}
+      {/* Wireframe app content */}
+      <div className="flex-1 flex flex-col px-[8%] pt-[5%] gap-[3px] overflow-hidden">
+        {/* Hero card */}
+        <div className="w-full rounded-[2px] flex-[2.5]" style={{ backgroundColor: `${accent}12`, border: `0.5px solid ${accent}15` }} />
+        {/* Two-column cards */}
+        <div className="flex gap-[2px] flex-[1.5]">
+          <div className="flex-1 rounded-[2px]" style={{ backgroundColor: `${accent}08` }} />
+          <div className="flex-1 rounded-[2px]" style={{ backgroundColor: `${accent}08` }} />
+        </div>
+        {/* List items */}
+        <div className="flex gap-[2px] items-center flex-[0.6]">
+          <div className="rounded-full" style={{ width: Math.max(3, headlineFontSize * 0.4), height: Math.max(3, headlineFontSize * 0.4), backgroundColor: `${accent}20`, flexShrink: 0 }} />
+          <div className="flex-1 h-[2px] rounded-full" style={{ backgroundColor: `${accent}10` }} />
+        </div>
+        <div className="flex gap-[2px] items-center flex-[0.6]">
+          <div className="rounded-full" style={{ width: Math.max(3, headlineFontSize * 0.4), height: Math.max(3, headlineFontSize * 0.4), backgroundColor: `${accent}15`, flexShrink: 0 }} />
+          <div className="flex-1 h-[2px] rounded-full" style={{ backgroundColor: `${accent}08` }} />
+        </div>
       </div>
-      <div
-        className="mt-1 rounded-[2px]"
-        style={{ width: '55%', height: '35%', background: `${textColor}10`, border: `0.5px solid ${textColor}20` }}
-      />
+      {/* Bottom nav dots */}
+      <div className="flex justify-around items-center px-[10%]" style={{ height: '8%', flexShrink: 0 }}>
+        <div className="rounded-full" style={{ width: Math.max(2, headlineFontSize * 0.35), height: Math.max(2, headlineFontSize * 0.35), backgroundColor: `${accent}25` }} />
+        <div className="rounded-full" style={{ width: Math.max(2, headlineFontSize * 0.35), height: Math.max(2, headlineFontSize * 0.35), backgroundColor: `${accent}12` }} />
+        <div className="rounded-full" style={{ width: Math.max(2, headlineFontSize * 0.35), height: Math.max(2, headlineFontSize * 0.35), backgroundColor: `${accent}12` }} />
+      </div>
     </div>
   );
 }
@@ -323,6 +348,16 @@ function ShowcaseCard({ app, onUse }: { app: ShowcaseApp; onUse: () => void }) {
   const deviceTypes = [...new Set(app.screenshots.map((s) => s.device))];
   const deviceLabels: Record<ShowcaseDevice, string> = { iphone: 'iPhone', ipad: 'iPad', mac: 'Mac', watch: 'Watch' };
 
+  // Pick a representative sample of screenshots for the card preview (1 per device type, max ~6)
+  const previewScreenshots: ShowcaseScreenshot[] = [];
+  const deviceOrder: ShowcaseDevice[] = ['iphone', 'ipad', 'mac', 'watch'];
+  for (const device of deviceOrder) {
+    const forDevice = app.screenshots.filter((s) => s.device === device);
+    // Take up to 2 iPhones, 1 each of others
+    const take = device === 'iphone' ? 2 : 1;
+    previewScreenshots.push(...forDevice.slice(0, take));
+  }
+
   return (
     <div className="group relative flex-shrink-0 w-[480px] snap-start rounded-2xl overflow-hidden bg-surface-800 ring-1 ring-white/8 hover:ring-white/20 transition-all">
       {/* Device screens area */}
@@ -334,16 +369,16 @@ function ShowcaseCard({ app, onUse }: { app: ShowcaseApp; onUse: () => void }) {
 
         {/* Devices — aligned at bottom */}
         <div className="relative z-10 flex items-end justify-center gap-2">
-          {app.screenshots.map((screenshot, i) => {
+          {previewScreenshots.map((screenshot, i) => {
             // Stagger heights: center items sit a bit higher
-            const mid = (app.screenshots.length - 1) / 2;
+            const mid = (previewScreenshots.length - 1) / 2;
             const dist = Math.abs(i - mid);
-            const yOff = dist * 12;
+            const yOff = dist * 10;
             return (
               <MiniDevice
                 key={i}
                 screenshot={screenshot}
-                baseWidth={72}
+                baseWidth={68}
                 style={{ transform: `translateY(${yOff}px)`, transition: 'transform 0.3s ease' }}
               />
             );
@@ -599,70 +634,67 @@ function TemplateGalleryCard({
           )}
         </div>
 
-        {/* Realistic phone mockup — proper aspect ratio */}
+        {/* Realistic phone mockup — width-driven, aspect ratio preserved */}
         {deviceSpec && (
           <div
-            className="absolute"
+            className="absolute overflow-hidden"
             style={{
               left: `${deviceX}%`,
               top: `${deviceSpec.transform.y}%`,
               width: `${Math.min(deviceSpec.transform.width, 65)}%`,
-              bottom: '-6%',
+              bottom: 0,
               transform: deviceRotation ? `rotate(${deviceRotation}deg)` : undefined,
             }}
           >
-            {/* Aspect ratio container */}
-            <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center' }}>
+            {/* Phone frame — width fills container, height from aspect ratio, overflows and clips */}
+            <div
+              className="relative w-full"
+              style={{
+                aspectRatio: '9 / 19.5',
+                borderRadius: '14% / 6.5%',
+                backgroundColor: '#1c1c1e',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.5), inset 0 0 0 0.5px rgba(255,255,255,0.08)',
+              }}
+            >
+              {/* Screen */}
               <div
-                className="relative h-full"
+                className="absolute overflow-hidden"
                 style={{
-                  aspectRatio: '9 / 19.5',
-                  maxWidth: '100%',
-                  borderRadius: '14% / 6.5%',
-                  backgroundColor: '#1c1c1e',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.5), inset 0 0 0 0.5px rgba(255,255,255,0.08)',
+                  top: '2.5%',
+                  left: '5%',
+                  right: '5%',
+                  bottom: '2.5%',
+                  borderRadius: '12% / 5.5%',
+                  background: 'linear-gradient(180deg, #111 0%, #0a0a0a 100%)',
                 }}
               >
-                {/* Screen */}
-                <div
-                  className="absolute overflow-hidden"
-                  style={{
-                    top: '2.5%',
-                    left: '5%',
-                    right: '5%',
-                    bottom: '2.5%',
-                    borderRadius: '12% / 5.5%',
-                    background: 'linear-gradient(180deg, #111 0%, #0a0a0a 100%)',
-                  }}
-                >
-                  <MiniAppScreen accent={preview.screenAccent} />
-                </div>
-                {/* Dynamic Island */}
-                <div
-                  className="absolute bg-black"
-                  style={{
-                    top: '3.5%',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '28%',
-                    height: '2.8%',
-                    borderRadius: 99,
-                  }}
-                />
-                {/* Home indicator */}
-                <div
-                  className="absolute"
-                  style={{
-                    bottom: '2%',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '30%',
-                    height: '0.8%',
-                    borderRadius: 99,
-                    backgroundColor: 'rgba(255,255,255,0.15)',
-                  }}
-                />
+                <MiniAppScreen accent={preview.screenAccent} />
               </div>
+              {/* Dynamic Island */}
+              <div
+                className="absolute bg-black"
+                style={{
+                  top: '3.5%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '28%',
+                  height: '2.8%',
+                  borderRadius: 99,
+                }}
+              />
+              {/* Home indicator */}
+              <div
+                className="absolute"
+                style={{
+                  bottom: '2%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '30%',
+                  height: '0.8%',
+                  borderRadius: 99,
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                }}
+              />
             </div>
           </div>
         )}
