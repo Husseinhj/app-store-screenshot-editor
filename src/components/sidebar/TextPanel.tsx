@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { useProjectStore } from '@/store/useProjectStore';
 import { fonts, fontWeights } from '@/lib/fonts';
 import { SidebarSection } from './SidebarSection';
@@ -23,6 +23,10 @@ interface Props {
 export function TextPanel({ element }: Props) {
   const updateTextElement = useProjectStore((s) => s.updateTextElement);
 
+  // Use a ref to always have access to the current element id in callbacks
+  const elementIdRef = useRef(element.id);
+  elementIdRef.current = element.id;
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: false, codeBlock: false, blockquote: false, horizontalRule: false }),
@@ -35,7 +39,7 @@ export function TextPanel({ element }: Props) {
     ],
     content: element.content,
     onUpdate: ({ editor }) => {
-      updateTextElement(element.id, { content: editor.getHTML() });
+      updateTextElement(elementIdRef.current, { content: editor.getHTML() });
     },
   });
 
@@ -44,7 +48,7 @@ export function TextPanel({ element }: Props) {
     if (editor && editor.getHTML() !== element.content) {
       editor.commands.setContent(element.content);
     }
-  }, [element.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [element.id, editor]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setFontSizeForSelection = useCallback(
     (size: number) => {

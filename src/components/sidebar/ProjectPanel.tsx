@@ -81,21 +81,19 @@ export function ProjectPanel() {
 
   // ─── Image upload ───────────────────────────────────────────────────────────
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
+    async (acceptedFiles: File[]) => {
       if (acceptedFiles.length === 0) return;
       const file = acceptedFiles[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        const state = useProjectStore.getState();
-        const currentScreenshots = state.project.screenshotsByPlatform[state.project.platform] ?? [];
-        const selected = currentScreenshots.find((s) => s.id === state.project.selectedScreenshotId);
-        if (!selected) return;
-        const deviceEl = getDeviceElement(selected);
-        if (deviceEl) {
-          updateDeviceElement(deviceEl.id, { screenshotImageUrl: reader.result as string });
-        }
-      };
-      reader.readAsDataURL(file);
+      const { readFileAsCompressedDataUrl } = await import('@/lib/imageUtils');
+      const url = await readFileAsCompressedDataUrl(file);
+      const state = useProjectStore.getState();
+      const currentScreenshots = state.project.screenshotsByPlatform[state.project.platform] ?? [];
+      const selected = currentScreenshots.find((s) => s.id === state.project.selectedScreenshotId);
+      if (!selected) return;
+      const deviceEl = getDeviceElement(selected);
+      if (deviceEl) {
+        updateDeviceElement(deviceEl.id, { screenshotImageUrl: url });
+      }
     },
     [updateDeviceElement]
   );

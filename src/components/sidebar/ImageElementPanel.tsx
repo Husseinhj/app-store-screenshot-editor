@@ -12,14 +12,12 @@ export function ImageElementPanel({ element }: Props) {
   const updateImageElement = useProjectStore((s) => s.updateImageElement);
 
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
+    async (acceptedFiles: File[]) => {
       if (acceptedFiles.length === 0) return;
       const file = acceptedFiles[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        updateImageElement(element.id, { imageUrl: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      const { readFileAsCompressedDataUrl } = await import('@/lib/imageUtils');
+      const url = await readFileAsCompressedDataUrl(file);
+      updateImageElement(element.id, { imageUrl: url });
     },
     [element.id, updateImageElement]
   );

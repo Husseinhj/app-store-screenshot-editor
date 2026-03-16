@@ -227,6 +227,7 @@ interface ProjectStore {
   exitGroup: () => void;
 
   // Template actions
+  lastAppliedTemplateId: string | null;
   applyTemplate: (templateId: string) => void;
 
   // App Icon Editor
@@ -325,6 +326,7 @@ export const useProjectStore = create<ProjectStore>()(
         selectedPlatforms: ['ios', 'ipados', 'macos'] as IconPlatform[],
       },
       selectedAppIconElementIds: [] as string[],
+      lastAppliedTemplateId: null as string | null,
 
       // ─── Multi-project actions ──────────────────────────────────────────
 
@@ -491,7 +493,7 @@ export const useProjectStore = create<ProjectStore>()(
 
       // ─── Screenshot CRUD ────────────────────────────────────────────────
 
-      addScreenshot: () =>
+      addScreenshot: () => {
         set(produce((state: ProjectStore) => {
           const platform = state.project.platform;
           const screenshots = state.project.screenshotsByPlatform[platform];
@@ -500,7 +502,13 @@ export const useProjectStore = create<ProjectStore>()(
           screenshots.push(newScreenshot);
           state.project.selectedScreenshotId = newScreenshot.id;
           state.selectedElementIds = [];
-        })),
+        }));
+        // Auto-apply last used template to the new screenshot
+        const lastTemplateId = get().lastAppliedTemplateId;
+        if (lastTemplateId) {
+          get().applyTemplate(lastTemplateId);
+        }
+      },
 
       removeScreenshot: (id) =>
         set(produce((state: ProjectStore) => {
@@ -1092,6 +1100,7 @@ export const useProjectStore = create<ProjectStore>()(
 
       applyTemplate: (templateId) =>
         set(produce((state: ProjectStore) => {
+          state.lastAppliedTemplateId = templateId;
           const template = designTemplates.find((t) => t.id === templateId);
           if (!template) return;
           const platform = state.project.platform;
@@ -1104,6 +1113,11 @@ export const useProjectStore = create<ProjectStore>()(
           const existingUrls = s.elements
             .filter((e): e is DeviceFrameElement => e.type === 'device-frame')
             .map((e) => e.screenshotImageUrl);
+
+          // Collect existing text content to preserve when switching templates
+          const existingTexts = s.elements
+            .filter((e): e is TextElement => e.type === 'text')
+            .map((e) => e.content);
 
           // Choose default device for current platform
           const defaultDeviceMap: Record<Platform, DeviceType> = {
@@ -1125,6 +1139,7 @@ export const useProjectStore = create<ProjectStore>()(
 
           // Build new elements from template specs
           let deviceIndex = 0;
+          let textIndex = 0;
           const newElements: CanvasElement[] = template.elements.map((spec, specIndex) => {
             const base = {
               id: nanoid(),
@@ -1155,10 +1170,13 @@ export const useProjectStore = create<ProjectStore>()(
             }
 
             if (spec.type === 'text' && spec.text) {
+              // Preserve existing text content when switching templates
+              const preservedContent = existingTexts[textIndex] ?? spec.text.content;
+              textIndex++;
               const el: TextElement = {
                 ...base,
                 type: 'text',
-                content: spec.text.content,
+                content: preservedContent,
                 fontFamily: spec.text.fontFamily,
                 fontSize: Math.round(spec.text.fontSize * fontScale),
                 fontWeight: spec.text.fontWeight,
@@ -1311,6 +1329,34 @@ export const useProjectStore = create<ProjectStore>()(
     ),
     {
       name: 'app-store-screenshot-editor',
+      storage: {
+        getItem: (name) => {
+          const str = localStorage.getItem(name);
+          return str ? JSON.parse(str) : null;
+        },
+        setItem: (name, value) => {
+          try {
+            localStorage.setItem(name, JSON.stringify(value));
+          } catch (e) {
+            if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+              console.warn('Storage quota exceeded. Consider removing unused projects or images.');
+              // Show a non-blocking notification
+              if (typeof document !== 'undefined') {
+                const existing = document.getElementById('storage-warning');
+                if (!existing) {
+                  const toast = document.createElement('div');
+                  toast.id = 'storage-warning';
+                  toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#b91c1c;color:white;padding:10px 20px;border-radius:8px;z-index:99999;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.3)';
+                  toast.textContent = 'Storage full — delete unused projects or images to keep saving.';
+                  document.body.appendChild(toast);
+                  setTimeout(() => toast.remove(), 6000);
+                }
+              }
+            }
+          }
+        },
+        removeItem: (name) => localStorage.removeItem(name),
+      },
       version: 9,
       migrate: (persisted: any, version: number) => {
         if (version < 2) {
@@ -1500,6 +1546,7 @@ export const useProjectStore = create<ProjectStore>()(
         userGuides: state.userGuides,
         activeGuidelinePresetId: state.activeGuidelinePresetId,
         appIconProject: state.appIconProject,
+        lastAppliedTemplateId: state.lastAppliedTemplateId,
         // Note: clipboard, snapGuides, selectedElementIds, editingTextElementId are NOT persisted
       }),
     }

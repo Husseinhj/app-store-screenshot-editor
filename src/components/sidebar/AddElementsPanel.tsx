@@ -30,12 +30,12 @@ export function AddElementsPanel() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = () => {
+    input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => addImageElement(reader.result as string);
-      reader.readAsDataURL(file);
+      const { readFileAsCompressedDataUrl } = await import('@/lib/imageUtils');
+      const url = await readFileAsCompressedDataUrl(file);
+      addImageElement(url);
     };
     input.click();
   }, [addImageElement]);

@@ -43,13 +43,11 @@ export function BackgroundPanel() {
   const { background } = selected;
 
   const onDropBgImage = useCallback(
-    (files: File[]) => {
+    async (files: File[]) => {
       if (!files[0]) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        updateBackground({ type: 'image', imageUrl: reader.result as string });
-      };
-      reader.readAsDataURL(files[0]);
+      const { readFileAsCompressedDataUrl } = await import('@/lib/imageUtils');
+      const url = await readFileAsCompressedDataUrl(files[0]);
+      updateBackground({ type: 'image', imageUrl: url });
     },
     [updateBackground]
   );

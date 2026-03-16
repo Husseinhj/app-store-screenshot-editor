@@ -171,6 +171,9 @@ export function CanvasArea() {
     const handlePaste = (e: ClipboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      // Don't create new text elements when inline-editing text (e.g. Tiptap contenteditable)
+      if (useProjectStore.getState().editingTextElementId) return;
+      if ((e.target as HTMLElement).closest?.('[contenteditable="true"]')) return;
       const text = e.clipboardData?.getData('text/plain');
       if (text && text.trim()) {
         e.preventDefault();
@@ -188,39 +191,36 @@ export function CanvasArea() {
       const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
       if (files.length === 0) return;
 
-      files.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const url = reader.result as string;
+      files.forEach(async (file) => {
+        const { readFileAsCompressedDataUrl } = await import('@/lib/imageUtils');
+        const url = await readFileAsCompressedDataUrl(file);
 
-          // Check if dropped on a device-frame element
-          const container = containerRef.current;
-          if (container && selectedScreenshot) {
-            const rect = container.getBoundingClientRect();
-            const dropX = ((e.clientX - rect.left) / rect.width) * 100;
-            const dropY = ((e.clientY - rect.top) / rect.height) * 100;
+        // Check if dropped on a device-frame element
+        const container = containerRef.current;
+        if (container && selectedScreenshot) {
+          const rect = container.getBoundingClientRect();
+          const dropX = ((e.clientX - rect.left) / rect.width) * 100;
+          const dropY = ((e.clientY - rect.top) / rect.height) * 100;
 
-            // Check if drop position is over a device-frame element
-            const deviceEl = selectedScreenshot.elements.find((el) => {
-              if (el.type !== 'device-frame') return false;
-              return (
-                dropX >= el.transform.x &&
-                dropX <= el.transform.x + el.transform.width &&
-                dropY >= el.transform.y &&
-                dropY <= el.transform.y + el.transform.height
-              );
-            });
+          // Check if drop position is over a device-frame element
+          const deviceEl = selectedScreenshot.elements.find((el) => {
+            if (el.type !== 'device-frame') return false;
+            return (
+              dropX >= el.transform.x &&
+              dropX <= el.transform.x + el.transform.width &&
+              dropY >= el.transform.y &&
+              dropY <= el.transform.y + el.transform.height
+            );
+          });
 
-            if (deviceEl && deviceEl.type === 'device-frame') {
-              useProjectStore.getState().updateDeviceElement(deviceEl.id, { screenshotImageUrl: url });
-              return;
-            }
+          if (deviceEl && deviceEl.type === 'device-frame') {
+            useProjectStore.getState().updateDeviceElement(deviceEl.id, { screenshotImageUrl: url });
+            return;
           }
+        }
 
-          // Otherwise create a new image element
-          addImageElement(url);
-        };
-        reader.readAsDataURL(file);
+        // Otherwise create a new image element
+        addImageElement(url);
       });
     },
     [addImageElement, selectedScreenshot]
