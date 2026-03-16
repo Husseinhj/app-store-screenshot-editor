@@ -1578,6 +1578,15 @@ export const useProjectStore = create<ProjectStore>()(
           }
         }
         isRehydrating = false;
+        // Force persist middleware to write initial state to localStorage.
+        // Zustand persist only saves when partialized state changes via setState,
+        // but on first load no such change occurs, so the main store key is never
+        // created. Without this, every page refresh generates a new activeProjectId
+        // and the user's project data is orphaned.
+        queueMicrotask(() => {
+          const s = useProjectStore.getState();
+          useProjectStore.setState({ projectList: [...s.projectList] });
+        });
       },
     }
   )

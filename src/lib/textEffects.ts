@@ -21,7 +21,9 @@ export function getTextEffectStyles(effects?: TextEffects): React.CSSProperties 
   }
   if (effects.gradientFill) {
     const stops = effects.gradientFill.stops.map(s => `${s.color} ${s.position}%`).join(', ');
-    style.background = `linear-gradient(${effects.gradientFill.angle}deg, ${stops})`;
+    // Use backgroundImage instead of background shorthand to prevent React's style
+    // reconciliation from resetting backgroundClip when only the gradient value changes
+    style.backgroundImage = `linear-gradient(${effects.gradientFill.angle}deg, ${stops})`;
     style.WebkitBackgroundClip = 'text';
     style.WebkitTextFillColor = 'transparent';
     style.backgroundClip = 'text';

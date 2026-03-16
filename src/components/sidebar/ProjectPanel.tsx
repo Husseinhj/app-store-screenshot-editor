@@ -13,10 +13,11 @@ function getDeviceElement(screenshot: Screenshot): DeviceFrameElement | undefine
   return screenshot.elements.find((e) => e.type === 'device-frame') as DeviceFrameElement | undefined;
 }
 
-/** Find the first text element content in a screenshot */
+/** Find the first text element content in a screenshot (strips HTML tags) */
 function getTextContent(screenshot: Screenshot): string {
   const textEl = screenshot.elements.find((e) => e.type === 'text');
-  return textEl && textEl.type === 'text' ? textEl.content : '';
+  if (!textEl || textEl.type !== 'text') return '';
+  return textEl.content.replace(/<[^>]*>/g, '');
 }
 
 export function ProjectPanel() {
