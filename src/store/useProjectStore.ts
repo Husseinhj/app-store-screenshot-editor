@@ -260,6 +260,11 @@ const initialProjectId = nanoid();
 // Guard: prevent auto-save from firing during rehydration
 let isRehydrating = true;
 
+// Captured store API — set during store creation so onRehydrateStorage can use it
+// (useProjectStore is not yet assigned when onRehydrateStorage fires during create())
+let storeSet: ((partial: Partial<ProjectStore>) => void) | null = null;
+let storeGet: (() => ProjectStore) | null = null;
+
 // Helper: save/load per-project data in localStorage
 function saveProjectData(projectId: string, project: Project) {
   try {
@@ -279,7 +284,11 @@ function deleteProjectData(projectId: string) {
 export const useProjectStore = create<ProjectStore>()(
   persist(
     temporal(
-    (set, get) => ({
+    (set, get) => {
+      // Capture set/get for use in onRehydrateStorage (which fires before create() returns)
+      storeSet = set as (partial: Partial<ProjectStore>) => void;
+      storeGet = get;
+      return {
       // Multi-project
       appView: 'editor' as AppView,
       projectList: [{
@@ -1315,7 +1324,7 @@ export const useProjectStore = create<ProjectStore>()(
         if (!screenshot) return [];
         return screenshot.elements.filter((e) => selectedElementIds.includes(e.id));
       },
-    }),
+    }; },
     {
       partialize: (state) => ({ project: state.project }),
       limit: 100,
@@ -1564,13 +1573,15 @@ export const useProjectStore = create<ProjectStore>()(
         // Note: project is auto-saved separately — see subscriber below
       }),
       onRehydrateStorage: () => (state) => {
-        // After Zustand restores persisted fields, load the active project from its own key
-        if (state?.activeProjectId) {
+        // After Zustand restores persisted fields, load the active project from its own key.
+        // Note: useProjectStore is NOT yet assigned here (onRehydrateStorage fires during
+        // create()), so we use the captured storeSet/storeGet instead.
+        if (state?.activeProjectId && storeSet) {
           const saved = loadProjectData(state.activeProjectId);
           if (saved) {
             // Suppress auto-save during rehydration to avoid overwriting real data
             isRehydrating = true;
-            useProjectStore.setState({ project: saved });
+            storeSet({ project: saved });
             isRehydrating = false;
           } else {
             // First load — save the default initial project
@@ -1584,8 +1595,9 @@ export const useProjectStore = create<ProjectStore>()(
         // created. Without this, every page refresh generates a new activeProjectId
         // and the user's project data is orphaned.
         queueMicrotask(() => {
-          const s = useProjectStore.getState();
-          useProjectStore.setState({ projectList: [...s.projectList] });
+          if (!storeGet || !storeSet) return;
+          const s = storeGet();
+          storeSet({ projectList: [...s.projectList] });
         });
       },
     }
