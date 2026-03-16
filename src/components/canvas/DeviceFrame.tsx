@@ -188,6 +188,14 @@ function SvgFrame({
             top: 0,
           }}
         >
+          {/* SVG frame (behind) */}
+          <img
+            key={frameSvgPath}
+            src={frameSvgPath}
+            alt={def.label}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            draggable={false}
+          />
           {/* Screenshot — counter-rotated so it stays upright inside the rotated frame.
               The clip container is landscape (screenW × screenH). We size the image to
               portrait dims (screenH × screenW), center it, and rotate -90° so it visually
@@ -227,7 +235,12 @@ function SvgFrame({
               </div>
             )}
           </div>
-          {/* SVG frame */}
+        </div>
+      ) : (
+        // Landscape iPad or non-iPad: render normally
+        // SVG frame renders first (behind), screenshot on top — some SVGs (e.g. Apple Watch)
+        // have opaque raster screen areas that would cover the screenshot if rendered on top.
+        <>
           <img
             key={frameSvgPath}
             src={frameSvgPath}
@@ -235,10 +248,6 @@ function SvgFrame({
             className="absolute inset-0 w-full h-full pointer-events-none"
             draggable={false}
           />
-        </div>
-      ) : (
-        // Landscape iPad or non-iPad: render normally
-        <>
           <div
             className="absolute overflow-hidden"
             style={{
@@ -266,13 +275,6 @@ function SvgFrame({
               </div>
             )}
           </div>
-          <img
-            key={frameSvgPath}
-            src={frameSvgPath}
-            alt={def.label}
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            draggable={false}
-          />
         </>
       )}
     </div>
