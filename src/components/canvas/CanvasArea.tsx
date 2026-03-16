@@ -70,6 +70,8 @@ export function CanvasArea() {
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
         const tag = (e.target as HTMLElement).tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        if (isEditingText) return; // Let Tiptap handle Cmd+A while editing text
+        if ((e.target as HTMLElement).closest?.('[contenteditable="true"]')) return;
         e.preventDefault();
         useProjectStore.getState().selectAllElements();
       }
