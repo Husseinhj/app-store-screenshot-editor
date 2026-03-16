@@ -1,8 +1,8 @@
 import { ExportSize, Orientation, Platform } from '@/store/types';
 
 export const exportSizes: ExportSize[] = [
-  { label: 'iPhone 6.9" Display', width: 1320, height: 2868, platform: 'iphone' },
-  { label: 'iPhone 6.7" Display', width: 1290, height: 2796, platform: 'iphone' },
+  { label: 'iPhone 6.9" Display', width: 1260, height: 2736, platform: 'iphone' },
+  { label: 'iPhone 6.7" Display', width: 1284, height: 2778, platform: 'iphone' },
   { label: 'iPhone 6.5" Display', width: 1242, height: 2688, platform: 'iphone' },
   { label: 'iPhone 5.5" Display', width: 1242, height: 2208, platform: 'iphone' },
   { label: 'iPad Pro 13" Display', width: 2064, height: 2752, platform: 'ipad' },
