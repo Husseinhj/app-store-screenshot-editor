@@ -1,4 +1,4 @@
-const CACHE_NAME = 'screenshot-editor-v1';
+const CACHE_NAME = 'screenshot-editor-v2';
 
 // Assets to cache on install (app shell)
 const PRECACHE_ASSETS = [
@@ -33,7 +33,8 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first for navigation, cache-first for assets
+// Fetch: network-first for everything except fonts
+// This ensures deploys always serve fresh code without stale cache issues
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -46,30 +47,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navigation requests: network first, fallback to cache
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match(request).then((r) => r || caches.match('./index.html')))
-    );
-    return;
-  }
-
-  // Static assets (JS, CSS, images): cache first, fallback to network
-  if (
-    url.pathname.endsWith('.js') ||
-    url.pathname.endsWith('.css') ||
-    url.pathname.endsWith('.png') ||
-    url.pathname.endsWith('.svg') ||
-    url.pathname.endsWith('.woff2') ||
-    url.pathname.endsWith('.woff') ||
-    url.hostname.includes('gstatic.com')
-  ) {
+  // Google Fonts: cache-first (they're immutable/versioned)
+  if (url.hostname.includes('gstatic.com') || url.hostname.includes('googleapis.com')) {
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) return cached;
@@ -85,24 +64,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Google Fonts CSS: stale-while-revalidate
-  if (url.hostname.includes('googleapis.com')) {
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        const fetchPromise = fetch(request).then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        });
-        return cached || fetchPromise;
-      })
-    );
-    return;
-  }
-
-  // Default: network first
+  // Everything else (HTML, JS, CSS, images): network-first, cache fallback
   event.respondWith(
     fetch(request)
       .then((response) => {

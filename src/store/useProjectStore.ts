@@ -257,6 +257,9 @@ interface ProjectStore {
 const initialScreenshots = createInitialScreenshots();
 const initialProjectId = nanoid();
 
+// Guard: prevent auto-save from firing during rehydration
+let isRehydrating = true;
+
 // Helper: save/load per-project data in localStorage
 function saveProjectData(projectId: string, project: Project) {
   try {
@@ -1565,12 +1568,16 @@ export const useProjectStore = create<ProjectStore>()(
         if (state?.activeProjectId) {
           const saved = loadProjectData(state.activeProjectId);
           if (saved) {
+            // Suppress auto-save during rehydration to avoid overwriting real data
+            isRehydrating = true;
             useProjectStore.setState({ project: saved });
+            isRehydrating = false;
           } else {
             // First load — save the default initial project
             saveProjectData(state.activeProjectId, state.project);
           }
         }
+        isRehydrating = false;
       },
     }
   )
@@ -1579,6 +1586,7 @@ export const useProjectStore = create<ProjectStore>()(
 // Auto-save active project to localStorage on changes (debounced)
 let autoSaveTimeout: ReturnType<typeof setTimeout>;
 useProjectStore.subscribe((state, prevState) => {
+  if (isRehydrating) return; // Don't save during rehydration
   if (state.project !== prevState.project && state.activeProjectId) {
     clearTimeout(autoSaveTimeout);
     autoSaveTimeout = setTimeout(() => {
