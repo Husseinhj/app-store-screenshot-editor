@@ -33,9 +33,13 @@ export function AddElementsPanel() {
     input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) return;
-      const { readFileAsCompressedDataUrl } = await import('@/lib/imageUtils');
-      const url = await readFileAsCompressedDataUrl(file);
-      addImageElement(url);
+      try {
+        const { readFileAsCompressedDataUrl } = await import('@/lib/imageUtils');
+        const url = await readFileAsCompressedDataUrl(file);
+        addImageElement(url);
+      } catch (err) {
+        console.error('Failed to process image:', err);
+      }
     };
     input.click();
   }, [addImageElement]);

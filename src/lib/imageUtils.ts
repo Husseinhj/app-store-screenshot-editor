@@ -48,13 +48,14 @@ export function compressImageDataUrl(
 
 /**
  * Read a File as a compressed data URL suitable for localStorage.
+ * Falls back to URL.createObjectURL → canvas re-encoding if FileReader fails.
  */
 export function readFileAsCompressedDataUrl(
   file: File,
   maxDimension = 1200,
   quality = 0.7
 ): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = async () => {
       const dataUrl = reader.result as string;
@@ -65,7 +66,35 @@ export function readFileAsCompressedDataUrl(
         resolve(dataUrl);
       }
     };
-    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.onerror = () => {
+      // Fallback: use object URL → canvas to produce a data URL
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDimension || height > maxDimension) {
+          const scale = maxDimension / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } else {
+          resolve(objectUrl);
+        }
+        URL.revokeObjectURL(objectUrl);
+      };
+      img.onerror = () => {
+        // Last resort: return the object URL directly
+        resolve(objectUrl);
+      };
+      img.src = objectUrl;
+    };
     reader.readAsDataURL(file);
   });
 }
