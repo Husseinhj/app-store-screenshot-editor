@@ -1357,7 +1357,7 @@ export const useProjectStore = create<ProjectStore>()(
         },
         removeItem: (name) => localStorage.removeItem(name),
       },
-      version: 9,
+      version: 10,
       migrate: (persisted: any, version: number) => {
         if (version < 2) {
           // Migrate from v1 (flat Screenshot fields) to v2 (elements array)
@@ -1528,10 +1528,20 @@ export const useProjectStore = create<ProjectStore>()(
         if (version < 9) {
           // Migrate from v8 to v9: add app icon project (no existing data to migrate)
         }
+        if (version < 10) {
+          // Migrate from v9 to v10: move project data out of Zustand persist
+          // to avoid double-storing large image data in localStorage.
+          const state = persisted as any;
+          if (state?.project && state?.activeProjectId) {
+            saveProjectData(state.activeProjectId, state.project);
+            delete state.project; // Remove from persisted store — loaded via onRehydrateStorage
+          }
+        }
         return persisted;
       },
       partialize: (state) => ({
-        project: state.project,
+        // Note: project is NOT persisted here — it's auto-saved separately via the
+        // subscriber below to avoid double-storing large image data in localStorage.
         exportSizeIndex: state.exportSizeIndex,
         canvasView: state.canvasView,
         zoom: state.zoom,
@@ -1548,7 +1558,20 @@ export const useProjectStore = create<ProjectStore>()(
         appIconProject: state.appIconProject,
         lastAppliedTemplateId: state.lastAppliedTemplateId,
         // Note: clipboard, snapGuides, selectedElementIds, editingTextElementId are NOT persisted
+        // Note: project is auto-saved separately — see subscriber below
       }),
+      onRehydrateStorage: () => (state) => {
+        // After Zustand restores persisted fields, load the active project from its own key
+        if (state?.activeProjectId) {
+          const saved = loadProjectData(state.activeProjectId);
+          if (saved) {
+            useProjectStore.setState({ project: saved });
+          } else {
+            // First load — save the default initial project
+            saveProjectData(state.activeProjectId, state.project);
+          }
+        }
+      },
     }
   )
 );
